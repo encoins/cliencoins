@@ -1,6 +1,7 @@
 mod input;
 mod base_types;
 
+use std::fs::read;
 use std::net::TcpStream;
 use std::io::{Write, Read, stdin, stdout};
 use crate::input::Input;
@@ -15,14 +16,14 @@ fn get_entry() -> String {
 fn exchange_with_server(mut stream: TcpStream) {
     let stdout = std::io::stdout();
     let mut io = stdout.lock();
-    let mut buf = &mut [0; 1+4+4+4]; // the first to discrimine read/transfer then 3 element of type u32
+    let mut buf = [0; 1+4+4+4]; // the first to discrimine read/transfer then 3 element of type u32
 
     println!("Enter 'quit' when you want to leave");
     loop {
-        write!(io, "> ");
+        //write!(io, "> ");
         // pour afficher de suite
-        io.flush();
-        match Input::from(&*get_entry()[0]).unwrap() {
+        //io.flush();
+        match input::read_input() {
             Input::Transfer { sender, recipient, amount } => {
                 let a: u8 = (sender >> 24 ) as u8;
                 let b: u8 = (sender >> 16) as u8;
@@ -39,7 +40,8 @@ fn exchange_with_server(mut stream: TcpStream) {
                 let k: u8 = (amount >> 8) as u8;
                 let l: u8 = amount as u8;
 
-                buf = &mut [1, a, b, c, d, e, f, g, h, i, j, k, l];
+                buf = [1, a, b, c, d, e, f, g, h, i, j, k, l];
+                //buf = [1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8]
             }
             Input::Balance { user } => {
                 let a: u8 = (user >> 24) as u8;
@@ -47,7 +49,8 @@ fn exchange_with_server(mut stream: TcpStream) {
                 let c: u8 = (user >> 8) as u8;
                 let d: u8 = user as u8;
 
-                buf = &mut [1, a, b, c, d, 0, 0, 0, 0, 0, 0, 0, 0];
+                buf = [1, a, b, c, d, 0, 0, 0, 0, 0, 0, 0, 0];
+                //buf = [1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8,1 as u8]
             }
             /// Input to get transactions history of an account according to a given account
             Input::Help => {
@@ -63,8 +66,8 @@ fn exchange_with_server(mut stream: TcpStream) {
                 return;
             }
         }
-        write!(stream, "{}", buf);
-        match stream.read(buf) {
+        stream.write(&mut buf);
+        match stream.read(&mut buf) {
                     Ok(received) => {
                         if received < 1 {
                             println!("Perte de la connexion avec le serveur");

@@ -1,6 +1,8 @@
 //! Definition of the input enum defining regular inputs
 
 use crate::base_types::{Currency, UserId};
+use std::io;
+use std::io::Write;
 
 /// An input can be either a request to make two Processus interact or to interact with the GUI
 pub enum Input
@@ -100,6 +102,48 @@ impl Input
                         Err(String::from("The typed command could not be recognised! (Type \"help\" to get a list of possible commands)"))
                     }
             }
+        }
+    }
+
+}
+
+
+pub fn read_input() -> Input{
+
+    // Save the line entered on the terminal in the string input_line
+
+    // Loops until no correct inputs has been entered
+    loop
+    {
+        let mut input_line = String::new();
+        let words: Vec<&str>;
+
+        io::stdin()
+            .read_line(&mut input_line)
+            .expect("Failed to read line");
+
+        // Deletion of the last character : '\n'
+        let len = input_line.len();
+
+        // Parsing of the input line as an op_type and an array args of arguments, managing the syntax errors
+        words = input_line[..len-1].split(' ').collect();
+
+        let input = Input::from(&words);
+
+
+        match input
+        {
+            Ok(input) =>
+                {
+                    return input
+                }
+            Err(string_error) =>
+                {
+                    // Print error message and ask for another input
+                    println!("{}", string_error);
+                    print!("> ");
+                    io::stdout().flush().unwrap()
+                }
         }
     }
 
