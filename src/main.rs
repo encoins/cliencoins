@@ -1,5 +1,9 @@
+mod input;
+mod base_types;
+
 use std::net::TcpStream;
 use std::io::{Write, Read, stdin, stdout};
+use crate::input::Input;
 
 fn get_entry() -> String {
     let mut buf = String::new();
@@ -11,21 +15,56 @@ fn get_entry() -> String {
 fn exchange_with_server(mut stream: TcpStream) {
     let stdout = std::io::stdout();
     let mut io = stdout.lock();
-    let mut buf = &mut [0; 3];
+    let mut buf = &mut [0; 1+4+4+4]; // the first to discrimine read/transfer then 3 element of type u32
 
     println!("Enter 'quit' when you want to leave");
     loop {
         write!(io, "> ");
         // pour afficher de suite
         io.flush();
-        match &*get_entry() {
-            "quit" => {
+        match Input::from(&*get_entry()[0]).unwrap() {
+            Input::Transfer { sender, recipient, amount } => {
+                let a: u8 = (sender >> 24 ) as u8;
+                let b: u8 = (sender >> 16) as u8;
+                let c: u8 = (sender >> 8) as u8;
+                let d: u8 = sender as u8;
+
+                let e: u8 = (recipient >> 24) as u8;
+                let f: u8 = (recipient >> 16) as u8;
+                let g: u8 = (recipient >> 8) as u8;
+                let h: u8 = recipient as u8;
+
+                let i: u8 = (amount >> 24) as u8;
+                let j: u8 = (amount >> 16) as u8;
+                let k: u8 = (amount >> 8) as u8;
+                let l: u8 = amount as u8;
+
+                buf = &mut [1, a, b, c, d, e, f, g, h, i, j, k, l];
+            }
+            Input::Balance { user } => {
+                let a: u8 = (user >> 24) as u8;
+                let b: u8 = (user >> 16) as u8;
+                let c: u8 = (user >> 8) as u8;
+                let d: u8 = user as u8;
+
+                buf = &mut [1, a, b, c, d, 0, 0, 0, 0, 0, 0, 0, 0];
+            }
+            /// Input to get transactions history of an account according to a given account
+            Input::Help => {
+                return;
+            }
+            /// Input to clear terminal from previous inputs
+            Input::Clear => {
+                return;
+            }
+            /// Input to quit program
+            Input::Quit => {
                 println!("bye !");
                 return;
             }
-            line => {
-                write!(stream, "{}\n", line);
-                match stream.read(buf) {
+        }
+        write!(stream, "{}", buf);
+        match stream.read(buf) {
                     Ok(received) => {
                         if received < 1 {
                             println!("Perte de la connexion avec le serveur");
@@ -38,10 +77,9 @@ fn exchange_with_server(mut stream: TcpStream) {
                     }
                 }
                 println!("Réponse du serveur : {:?}", buf);
-            }
         }
     }
-}
+
 
 fn main() {
     println!("Tentative de connexion au serveur...");
