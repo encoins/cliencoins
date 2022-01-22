@@ -8,3 +8,5 @@ pub type Currency = u32;
 
 /// For the moment, the sequence id of a transaction is a 32-bit integer. Maybe a specific type for big numbers should be implemented to avoid future problems
 pub type SeqId = u32;
+
+pub type ComprPubKey = [u8; 32]; // from CompressedEdwardsY

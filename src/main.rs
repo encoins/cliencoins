@@ -1,6 +1,10 @@
 mod input;
 mod base_types;
 mod network;
+mod crypto;
+mod client;
+mod instructions;
+mod message;
 
 use std::fs::read;
 use std::net::TcpStream;

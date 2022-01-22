@@ -95,6 +95,8 @@ pub fn connect_to_serv() {
         println!("{}", addr);
         println!("Tentative de connexion au serveur...");
 
+        if addr == "quit" {return; }
+
         match TcpStream::connect(addr) {
             Ok(stream) => {
                 println!("Connexion au serveur réussie !");

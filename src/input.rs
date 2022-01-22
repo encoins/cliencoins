@@ -3,6 +3,7 @@
 use crate::base_types::{Currency, UserId};
 use std::io;
 use std::io::Write;
+//use std::net::SocketAddr;
 
 /// An input can be either a request to make two Processus interact or to interact with the GUI
 pub enum Input
@@ -15,7 +16,7 @@ pub enum Input
     Clear,
     /// Input to quit program
     Quit,
-    Balance { user : UserId }
+    Balance { user : UserId },
 }
 
 impl Input
@@ -97,6 +98,17 @@ impl Input
                             Ok(Input::Balance { user: args[0] })
                         }
                     }
+/*
+                "reconnect" => {
+                    {
+                        if args.len() != 0
+                        {
+                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                        } else {
+                            Ok(Input::Reconnect{ addr : SocketAddr::from_str(args[0]) })
+                        }
+                    }
+                } */
                 _ =>
                     {
                         Err(String::from("The typed command could not be recognised! (Type \"help\" to get a list of possible commands)"))
