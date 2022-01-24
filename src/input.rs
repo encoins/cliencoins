@@ -3,7 +3,6 @@
 use crate::base_types::{Currency, UserId};
 use std::io;
 use std::io::Write;
-//use std::net::SocketAddr;
 
 /// An input can be either a request to make two Processus interact or to interact with the GUI
 pub enum Input

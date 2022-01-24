@@ -1,13 +1,15 @@
 use std::fmt::{Display, Formatter};
 use crate::base_types::{Currency, UserId};
+use serde::{Serialize};
 
-#[derive(Clone)]
+#[derive(Clone,Serialize)]
 pub enum Instruction {
 
     Transfer{sender : UserId, recipient : UserId, amount : Currency},
 
     Balance{user: UserId}
 }
+
 
 
 impl Display for Instruction
@@ -21,4 +23,3 @@ impl Display for Instruction
         }
     }
 }
-
