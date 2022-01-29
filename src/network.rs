@@ -27,7 +27,10 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
 
                 let signed_instruction = instruction.sign_instruction(&client.secret_key);
 
-                let buf = &(bincode::serialize(&signed_instruction).unwrap()[..]);
+                let msg = &(bincode::serialize(&signed_instruction).unwrap()[..]);
+                stream.write(msg);
+
+
 
             }
             Input::Balance { user } => {
@@ -37,7 +40,8 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
 
                 let signed_instruction = instruction.sign_instruction(&client.secret_key);
 
-                let buf = &(bincode::serialize(&signed_instruction).unwrap()[..]);
+                let msg = &(bincode::serialize(&signed_instruction).unwrap()[..]);
+                stream.write(msg);
             }
             /// Input to get transactions history of an account according to a given account
             Input::Help => {
@@ -53,7 +57,6 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
                 return;
             }
         }
-        stream.write(&mut buf);
         match stream.read(&mut buf) {
             Ok(received) => {
                 if received < 1 {
