@@ -2,11 +2,12 @@ use std::fs::read;
 use std::net::{TcpStream,SocketAddr};
 use std::io::{Write, Read, stdin, stdout};
 use crate::client::Client;
+use crate::instructions::{Transfer};
 
 
 use crate::input::{Input,read_input};
 use crate::instructions::Instruction;
-use crate::crypto::{SignedInstruction};
+use crate::crypto::{SignedTransfer};
 
 pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je suis tenté de le faire en impl de Client
     let stdout = std::io::stdout();
@@ -21,26 +22,18 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
         match read_input() {
             Input::Transfer { sender, recipient, amount } => {
 
-                let instruction = Instruction::Transfer {sender,recipient,amount};
-                let serialized_instruction = &(bincode::serialize(&instruction).unwrap()[..]);
-                println!("serialized = {:?}", serialized_instruction);
+                let transfer = Transfer{sender,recipient,amount};
+                let serialized_transfer = &(bincode::serialize(&transfer).unwrap()[..]);
+                println!("serialized = {:?}", serialized_transfer);
 
-                let signed_instruction = instruction.sign_instruction(&client.secret_key);
+                let signed_transfer = transfer.sign_transfer(&client.secret_key);
 
-                let msg = &(bincode::serialize(&signed_instruction).unwrap()[..]);
+                let msg = &(bincode::serialize(&signed_transfer).unwrap()[..]);
                 stream.write(msg);
-
-
 
             }
             Input::Balance { user } => {
-                let instruction = Instruction::Balance {user};
-                let serialized_instruction = &(bincode::serialize(&instruction).unwrap()[..]);
-                println!("serialized = {:?}", serialized_instruction);
-
-                let signed_instruction = instruction.sign_instruction(&client.secret_key);
-
-                let msg = &(bincode::serialize(&signed_instruction).unwrap()[..]);
+                let msg = &(bincode::serialize(&Instruction::Balance {user}).unwrap()[..]);
                 stream.write(msg);
             }
             /// Input to get transactions history of an account according to a given account
