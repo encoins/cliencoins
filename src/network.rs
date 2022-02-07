@@ -7,7 +7,6 @@ use crate::instructions::{Transfer};
 
 use crate::input::{Input,read_input};
 use crate::instructions::Instruction;
-use crate::crypto::{SignedTransfer};
 
 pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je suis tenté de le faire en impl de Client
     let stdout = std::io::stdout();
@@ -22,13 +21,14 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
         match read_input() {
             Input::Transfer { sender, recipient, amount } => {
 
-                let transfer = Transfer{sender,recipient,amount};
+                let transfer : Transfer = Transfer{sender,recipient,amount};
+
                 let serialized_transfer = &(bincode::serialize(&transfer).unwrap()[..]);
-                println!("serialized = {:?}", serialized_transfer);
 
                 let signed_transfer = transfer.sign_transfer(&client.secret_key);
 
                 let msg = &(bincode::serialize(&signed_transfer).unwrap()[..]);
+                println!("msg : {:?}",msg);
                 stream.write(msg);
 
             }

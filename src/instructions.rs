@@ -1,9 +1,8 @@
 use std::fmt::{Display, Formatter};
 use crate::base_types::{Currency, UserId};
 use serde::{Serialize};
-use crate::instructions::Instruction::SignedTransfer;
 
-#[derive(Clone,Serialize)]
+#[derive(Clone,Serialize,Debug)]
 pub struct Transfer {
     pub sender : UserId,
     pub recipient : UserId,
@@ -11,7 +10,7 @@ pub struct Transfer {
 }
 
 
-#[derive(Clone,Serialize)]
+#[derive(Clone,Serialize,Debug)]
 pub enum Instruction {
     // redondance avec la def de crypto :(
     SignedTransfer {

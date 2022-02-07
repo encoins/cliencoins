@@ -9,19 +9,14 @@ use crate::instructions::{Instruction, Transfer};
 use crate::message::Message;
 use serde::{Serialize};
 
-#[derive(Clone,Serialize)]
-pub struct SignedTransfer {
-    transfer : Transfer,
-    signature : Vec<u8> // vec of (signature .to_byte (easier to serialize))
-}
 
 
 impl Transfer {
 
-    pub fn sign_transfer(self, secret_key : &Keypair) -> SignedTransfer {
+    pub fn sign_transfer(self, secret_key : &Keypair) -> Instruction {
         let transfer : &[u8] = &(bincode::serialize(&self).unwrap()[..]);
         let signature = secret_key.sign(transfer).to_bytes().to_vec();
-        SignedTransfer {
+        Instruction::SignedTransfer {
             transfer : self,
             signature
         }
