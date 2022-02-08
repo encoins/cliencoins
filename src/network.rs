@@ -3,15 +3,18 @@ use std::net::{TcpStream,SocketAddr};
 use std::io::{Write, Read, stdin, stdout};
 use crate::client::Client;
 use crate::instructions::{Transfer};
+use bincode::deserialize;
+
 
 
 use crate::input::{Input,read_input};
 use crate::instructions::Instruction;
+use crate::response::Response;
 
 pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je suis tenté de le faire en impl de Client
     let stdout = std::io::stdout();
     let mut io = stdout.lock();
-    let mut buf = [0; 1+4+4+4]; // the first to discrimine read/transfer then 3 element of type u32
+    let mut buf = [0; 100]; // the first to discrimine read/transfer then 3 element of type u32
 
     println!("Enter 'quit' when you want to leave");
     loop {
@@ -62,7 +65,9 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
                 return;
             }
         }
-        println!("Réponse du serveur : {:?}", buf);
+        let response : Response = deserialize(&buf[..]).unwrap();
+        response.print();
+        //println!("Réponse du serveur : {:?}", buf);
     }
 }
 

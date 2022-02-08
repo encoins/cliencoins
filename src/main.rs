@@ -5,6 +5,7 @@ mod crypto;
 mod client;
 mod instructions;
 mod message;
+mod response;
 
 use std::fs::read;
 use std::net::TcpStream;
