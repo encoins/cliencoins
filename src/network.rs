@@ -4,6 +4,8 @@ use std::io::{Write, Read, stdin, stdout};
 use crate::client::Client;
 use crate::instructions::{Transfer};
 use bincode::deserialize;
+use crate::yaml::*;
+use std::process::exit;
 
 
 
@@ -50,7 +52,7 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
             /// Input to quit program
             Input::Quit => {
                 println!("bye !");
-                return;
+                exit(1);
             }
         }
         match stream.read(&mut buf) {
@@ -79,18 +81,14 @@ fn get_entry() -> String {
 }
 
 pub fn connect_to_serv(client : &Client) {
-    let stdout = std::io::stdout();
-    let mut io = stdout.lock();
-    println!("Choisi l'adresse de connection");
-    loop {
-        write!(io, "Adresse :");
-        io.flush();
-
-        let addr = &*get_entry();
-        println!("{}", addr);
-        println!("Tentative de connexion au serveur...");
-
-        if addr == "quit" {return; }
+    
+    let hash_net_config = yaml_to_hash("net_config.yml"); 
+    let nb_servers = read_network_parameters(&hash_net_config);       
+    
+    for i in 0..nb_servers {
+        let id_server = (client.id+i)%nb_servers + 1;
+        let addr = read_server_address(&hash_net_config, id_server);
+        println!("Tentative de connexion au serveur {}...", id_server);
 
         match TcpStream::connect(addr) {
             Ok(stream) => {
@@ -102,4 +100,5 @@ pub fn connect_to_serv(client : &Client) {
             }
         }
     }
+    println!("Aucun serveur n'est disponible :(")
 }
