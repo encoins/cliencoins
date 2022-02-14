@@ -2,9 +2,9 @@ parameters:
   nb_servers: 3
 
 server1:
-  ip: 140.77.180.89
-  port_server: 16842
-  port_client: 25984
+  ip: 192.168.43.14
+  port_server: 10000
+  port_client: 10001
 
 server2:
   ip: 140.77.180.89
@@ -15,3 +15,8 @@ server3:
   ip: 140.77.180.89
   port_server: 12349
   port_client: 12340
+ 
+server4:
+  ip: 192.168.43.14
+  port_server: 12345
+  port_client: 12328
