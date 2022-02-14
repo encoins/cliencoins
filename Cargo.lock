@@ -11,6 +11,7 @@ dependencies = [
  "ed25519-dalek",
  "rand",
  "serde",
+ "yaml-rust",
 ]
 
 [[package]]
@@ -142,6 +143,12 @@ name = "libc"
 version = "0.2.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eef78b64d87775463c549fbd80e19249ef436ea3bf1de2a1eb7e717ec7fab1e9"
+
+[[package]]
+name = "linked-hash-map"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
 name = "num-integer"
@@ -363,6 +370,14 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "yaml-rust"
+version = "0.4.5"
+source = "git+https://github.com/chyh1990/yaml-rust.git#da52a68615f2ecdd6b7e4567019f280c433c1521"
+dependencies = [
+ "linked-hash-map",
+]
 
 [[package]]
 name = "zeroize"
