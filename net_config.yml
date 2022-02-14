@@ -1,22 +1,22 @@
 parameters:
-  nb_servers: 3
+  nb_servers: 4
 
 server1:
-  ip: localhost
+  address: localhost
   port_server: 12342
   port_client: 12223
 
 server2:
-  ip: localhost
+  address: localhost
   port_server: 12347
   port_client: 12348
 
 server3:
-  ip: localhost
+  address: localhost
   port_server: 12349
   port_client: 12340
 
 server4:
-  ip: localhost
+  address: localhost
   port_server: 12345
   port_client: 12328
