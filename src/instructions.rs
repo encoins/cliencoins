@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use crate::base_types::{Currency, UserId};
+use crate::base_types::{ComprPubKey, Currency, UserId};
 use serde::{Serialize};
 
 #[derive(Clone,Serialize,Debug)]
@@ -14,11 +14,12 @@ pub struct Transfer {
 pub enum Instruction {
     // redondance avec la def de crypto :(
     SignedTransfer {
+        pub_key : ComprPubKey,
         transfer : Transfer,
         signature : Vec<u8> // vec of (signature .to_byte (easier to serialize))
     },
 
-    Balance{user: UserId}
+    Balance{user: UserId},
 }
 
 
@@ -29,7 +30,7 @@ impl Display for Instruction
         match self
         {
             Instruction::Balance {user} => { write!(f, " Balances of {}", user) }
-            Instruction::SignedTransfer {transfer, signature} => { write!(f, "New transfer : (sender : {}, recipient :{}, amount {})",transfer.sender , transfer.recipient, transfer.amount) }
+            Instruction::SignedTransfer {pub_key,transfer, signature} => { write!(f, "New transfer : (sender : {}, recipient :{}, amount {})",transfer.sender , transfer.recipient, transfer.amount) }
 
         }
     }

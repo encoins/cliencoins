@@ -17,6 +17,7 @@ impl Transfer {
         let transfer : &[u8] = &(bincode::serialize(&self).unwrap()[..]);
         let signature = secret_key.sign(transfer).to_bytes().to_vec();
         Instruction::SignedTransfer {
+            pub_key : secret_key.public.to_bytes(),
             transfer : self,
             signature
         }
