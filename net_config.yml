@@ -3,20 +3,20 @@ parameters:
 
 server1:
   ip: localhost
-  port_server: 12340
-  port_client: 12341
+  port_server: 12342
+  port_client: 12223
 
 server2:
   ip: localhost
-  port_server: 12342
-  port_client: 12343
+  port_server: 12347
+  port_client: 12348
 
 server3:
   ip: localhost
-  port_server: 12344
-  port_client: 12345
+  port_server: 12349
+  port_client: 12340
 
 server4:
   ip: localhost
-  port_server: 12346
-  port_client: 12347
+  port_server: 12345
+  port_client: 12328
