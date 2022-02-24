@@ -8,11 +8,13 @@ pub enum Response {
 }
 
 impl Response {
-    pub fn print(self) {
-        match self {
-            Response::Balance(amount) => {println!("Balance of {} ENcoinS)",amount)}
-            Response::Transfer(true) => { println!("Transfert succeeded") }
-            Response::Transfer(false) => { println!("Not enough money to this transfert") }
+    pub fn print(self)
+    {
+        match self
+        {
+            Response::Balance(amount) => { println!("Balance of {} ENcoinS)",amount) }
+            Response::Transfer(true) => { println!("Transfer succeeded") }
+            Response::Transfer(false) => { println!("Not enough money to this transfer") }
         }
     }
 }

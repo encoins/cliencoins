@@ -1,18 +1,20 @@
 use std::fs::read;
 use std::net::{TcpStream,SocketAddr};
 use std::io::{Write, Read, stdin, stdout};
-use crate::client::Client;
-use crate::instructions::{Transfer};
+//use crate::client::Client;
+//use crate::instructions::{Transfer};
 use bincode::deserialize;
 use crate::yaml::*;
 use std::process::exit;
+use crate::base_types::{Currency};
 
 
-
-use crate::input::{Input,read_input};
+use crate::input::{Input};
 use crate::instructions::Instruction;
+//use crate::instructions::Instruction;
 use crate::response::Response;
-
+use crate::UserId;
+/*
 pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je suis tenté de le faire en impl de Client
     let stdout = std::io::stdout();
     let mut io = stdout.lock();
@@ -23,7 +25,7 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
         //write!(io, "> ");
         // pour afficher de suite
         //io.flush();
-        match read_input() {
+        match  {
             Input::Transfer { sender, recipient, amount } => {
 
                 let transfer : Transfer = Transfer{sender,recipient,amount};
@@ -72,6 +74,8 @@ pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je sui
         //println!("Réponse du serveur : {:?}", buf);
     }
 }
+*/
+
 
 fn get_entry() -> String {
     let mut buf = String::new();
@@ -80,6 +84,7 @@ fn get_entry() -> String {
     buf.replace("\n", "").replace("\r", "")
 }
 
+/*
 pub fn connect_to_serv(client : &Client) {
     
     let hash_net_config = yaml_to_hash("net_config.yml"); 
@@ -93,7 +98,7 @@ pub fn connect_to_serv(client : &Client) {
         match TcpStream::connect(addr) {
             Ok(stream) => {
                 println!("Connexion au serveur réussie !");
-                exchange_with_server(client,stream);
+                //exchange_with_server(client,stream);
             }
             Err(e) => {
                 println!("La connexion au serveur a échoué : {}", e);
@@ -101,4 +106,77 @@ pub fn connect_to_serv(client : &Client) {
         }
     }
     println!("Aucun serveur n'est disponible :(")
+}
+*/
+
+pub fn connect_to_network(stream: &mut Option<TcpStream>)
+{
+    match stream
+    {
+        Some(_) => { return; }
+        None    =>
+            {
+                let hash_net_config = yaml_to_hash("net_config.yml");
+                let nb_nodes = read_network_parameters(&hash_net_config);
+
+                for i in 0..nb_nodes
+                {
+                    let id_node = i;
+                    let address = read_server_address(&hash_net_config, id_node);
+                    println!("Trying to connect to node {}...", id_node);
+
+                    let mut temp_stream = TcpStream::connect(address);
+                    match temp_stream
+                    {
+                        Ok(str) =>
+                            {
+
+                                stream.replace(str);
+                                return;
+                            }
+                        Err(_) =>
+                            {
+                                println!("Connection to node {} failed", id_node);
+                            }
+                    }
+
+                }
+            }
+    }
+}
+
+pub fn ask_balance(user: UserId, stream : &mut  Option<TcpStream> ) -> bool
+{
+    // Make sure the client is connected to the network
+    connect_to_network(stream);
+
+    match stream
+    {
+        Some(tcpstream) =>
+            {
+                // Create the ask balance message and send it
+                let msg = &(bincode::serialize(&Instruction::Balance {user}).unwrap()[..]);
+                tcpstream.write(msg);
+                true
+            }
+        None => { false }
+    }
+}
+
+pub fn transfer_request(stream : &mut  Option<TcpStream>, transfer : Instruction) -> bool
+{
+    // Make sure the client is connected to the network
+    connect_to_network(stream);
+
+    match stream
+    {
+        Some(tcpstream) =>
+            {
+                // Create the transfer request and send it
+                let msg = &(bincode::serialize(&transfer).unwrap()[..]);
+                tcpstream.write(msg);
+                true
+            }
+        None => { false }
+    }
 }

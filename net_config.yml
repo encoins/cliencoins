@@ -2,16 +2,21 @@ parameters:
   nb_servers: 3
 
 server1:
-  ip: 140.77.180.89
-  port_server: 16842
-  port_client: 25984
+  address: localhost
+  port_server: 12342
+  port_client: 12223
 
 server2:
-  ip: 140.77.180.89
+  address: localhost
   port_server: 12347
   port_client: 12348
 
 server3:
-  ip: 140.77.180.89
+  address: localhost
   port_server: 12349
   port_client: 12340
+
+server4:
+  address: localhost
+  port_server: 12345
+  port_client: 12328

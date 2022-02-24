@@ -1,10 +1,11 @@
-use crate::base_types::{ComprPubKey, UserId};
+/*use crate::base_types::{ComprPubKey, UserId};
 
 use rand::rngs::OsRng;
 use ed25519_dalek::{PublicKey,Verifier,Signature,Keypair};
 use crate::message::Message;
 
-pub struct Client {
+pub struct Client
+{
     pub id : UserId,
     pub secret_key : Keypair
 }
@@ -22,3 +23,4 @@ impl Client {
         }
     }
 }
+*/

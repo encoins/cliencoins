@@ -3,26 +3,30 @@
 use crate::base_types::{Currency, UserId};
 use std::io;
 use std::io::Write;
+use ed25519_dalek::{Keypair, PublicKey};
+use serde::de::Unexpected::Str;
 
-/// An input can be either a request to make two Processus interact or to interact with the GUI
+/// An input can either be a transfer or balance request or an interaction with the GUI
 pub enum Input
 {
 
-    Transfer{ sender : UserId, recipient: UserId, amount : Currency },
+    Transfer{ sender : PublicKey, recipient: PublicKey, amount : Currency },
     /// Input to get transactions history of an account according to a given account
     Help,
     /// Input to clear terminal from previous inputs
     Clear,
     /// Input to quit program
     Quit,
-    Balance { user : UserId },
+    Balance { user : PublicKey },
+    LoadWallet { path : String}
+
 }
 
 impl Input
 {
     const WRONG_AMOUNT_OF_ARGS: &'static str = "Wrong amount of arguments! (Type \"help\" to see how to use command)";
 
-    pub fn from(value: &Vec<&str>) -> Result<Input,String>
+    pub fn from(value: &Vec<&str>, sender_keypair: &Option<Keypair>) -> Result<Input,String>
     {
         let mut args = vec![];
         return if value.len() == 0
@@ -31,16 +35,8 @@ impl Input
         } else {
             for k in 1..value.len()
             {
-                let word = String::from(value[k]);
-                let arg: u32 = match word.trim().parse()
-                {
-                    Ok(num) => num,
-                    Err(_) =>
-                        {
-                            return Err(String::from("Arguments should be non negative numbers! (Type \"help\" to see how to use command)"));
-                        }
-                };
-                args.push(arg);
+                let word = String::from(value[k].trim());
+                args.push(word);
             }
 
             // Transforms first argument to lowercase
@@ -55,8 +51,25 @@ impl Input
                         if args.len() != 3
                         {
                             Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Transfer { sender: args[0], recipient: args[1], amount: args[2] })
+                        }
+                        else
+                        {
+                            let recipient_key : PublicKey = args[0].parse().unwrap();
+                            let amount : u32 = args[1].parse().unwrap();
+
+                            match sender_keypair
+                            {
+                                None =>
+                                    {
+                                        Err( String::from("Please load a wallet before trying to make a transfer!") )
+                                    }
+                                Some(key) =>
+                                    {
+                                        Ok( Input::Transfer {sender: key.public, recipient: recipient_key, amount: amount } )
+                                    }
+                            }
+
+
                         }
                     }
 
@@ -90,24 +103,56 @@ impl Input
 
                 "balance" =>
                     {
-                        if args.len() != 1
+                        match args.len()
                         {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Balance { user: args[0] })
+                            0 =>
+                                {
+                                    match sender_keypair
+                                    {
+                                        None =>
+                                            {
+                                                Err(String::from("Please load a wallet or explicit a public key form which you want to know the balance !"))
+                                            }
+                                        Some(key) =>
+                                            {
+                                                Ok(Input::Balance {user: key.public})
+                                            }
+                                    }
+                                }
+                            1 =>
+                                {
+                                    match parse_args_as(args)
+                                    {
+                                        Ok(num_arg) =>
+                                            {
+                                                Ok(Input::Balance { user: num_arg[0] })
+                                            },
+                                        Err(err) =>
+                                            {
+                                                Err(err)
+                                            }
+                                    }
+                                }
+
+                            _ =>
+                                {
+                                    Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                                }
                         }
+
                     }
-/*
-                "reconnect" => {
+
+                "ldwallet" =>
                     {
-                        if args.len() != 0
+                        if args.len()!= 1
                         {
                             Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Reconnect{ addr : SocketAddr::from_str(args[0]) })
+                        }
+                        else
+                        {
+                            Ok(Input::LoadWallet { path : args[0].clone() })
                         }
                     }
-                } */
                 _ =>
                     {
                         Err(String::from("The typed command could not be recognised! (Type \"help\" to get a list of possible commands)"))
@@ -118,46 +163,21 @@ impl Input
 
 }
 
-
-
-
-pub fn read_input() -> Input{
-
-    // Save the line entered on the terminal in the string input_line
-
-    // Loops until no correct inputs has been entered
-    loop
+fn parse_args_as<T: std::str::FromStr>(args: Vec<String>) -> Result<Vec<T>, String>
+{
+    let mut ars: Vec<T> = vec![];
+    for tmp_arg in args
     {
-        let mut input_line = String::new();
-        let words: Vec<&str>;
-
-        io::stdin()
-            .read_line(&mut input_line)
-            .expect("Failed to read line");
-
-        // Deletion of the last character : '\n'
-        let len = input_line.len();
-
-        // Parsing of the input line as an op_type and an array args of arguments, managing the syntax errors
-        words = input_line[..len-1].split(' ').collect();
-
-        let input = Input::from(&words);
-
-
-        match input
+        let arg: T = match tmp_arg.parse()
         {
-            Ok(input) =>
+            Ok(obj) => obj,
+            Err(_) =>
                 {
-                    return input
+                    return Err(String::from("Arguments have the wrong type! (Type \"help\" to see how to use command)"))
                 }
-            Err(string_error) =>
-                {
-                    // Print error message and ask for another input
-                    println!("{}", string_error);
-                    print!("> ");
-                    io::stdout().flush().unwrap()
-                }
-        }
+        };
+        ars.push(arg);
     }
 
+    return Ok(ars)
 }
