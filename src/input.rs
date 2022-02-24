@@ -2,6 +2,7 @@
 
 use crate::base_types::{Currency, UserId};
 use std::io;
+use crate::utils::{string_to_user_id};
 use std::io::Write;
 use ed25519_dalek::{Keypair, PublicKey};
 use serde::de::Unexpected::Str;
@@ -10,15 +11,16 @@ use serde::de::Unexpected::Str;
 pub enum Input
 {
 
-    Transfer{ sender : PublicKey, recipient: PublicKey, amount : Currency },
+    Transfer{ sender : UserId, recipient: UserId, amount : Currency },
     /// Input to get transactions history of an account according to a given account
     Help,
     /// Input to clear terminal from previous inputs
     Clear,
     /// Input to quit program
     Quit,
-    Balance { user : PublicKey },
-    LoadWallet { path : String}
+    Balance { user : UserId },
+    LoadWallet { path : String},
+    GenWallet { path : String}
 
 }
 
@@ -48,24 +50,24 @@ impl Input
 
                 "transfer" =>
                     {
-                        if args.len() != 3
+                        if args.len() != 2
                         {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
                         }
                         else
                         {
-                            let recipient_key : PublicKey = args[0].parse().unwrap();
-                            let amount : u32 = args[1].parse().unwrap();
 
                             match sender_keypair
                             {
                                 None =>
                                     {
-                                        Err( String::from("Please load a wallet before trying to make a transfer!") )
+                                        return Err( String::from("Please load a wallet before trying to make a transfer!") )
                                     }
                                 Some(key) =>
                                     {
-                                        Ok( Input::Transfer {sender: key.public, recipient: recipient_key, amount: amount } )
+                                        let recipient_key : PublicKey = PublicKey::from_bytes(string_to_user_id(&args[0]).as_ref()).unwrap();
+                                        let amount : u32 = args[1].parse().unwrap();
+                                        Ok( Input::Transfer {sender: key.public.to_bytes(), recipient: recipient_key.to_bytes(), amount: amount } )
                                     }
                             }
 
@@ -111,32 +113,22 @@ impl Input
                                     {
                                         None =>
                                             {
-                                                Err(String::from("Please load a wallet or explicit a public key form which you want to know the balance !"))
+                                                return Err(String::from("Please load a wallet or explicit a public key from which you want to know the balance !"))
                                             }
                                         Some(key) =>
                                             {
-                                                Ok(Input::Balance {user: key.public})
+                                                return Ok(Input::Balance {user: key.public.to_bytes()})
                                             }
                                     }
                                 }
                             1 =>
                                 {
-                                    match parse_args_as(args)
-                                    {
-                                        Ok(num_arg) =>
-                                            {
-                                                Ok(Input::Balance { user: num_arg[0] })
-                                            },
-                                        Err(err) =>
-                                            {
-                                                Err(err)
-                                            }
-                                    }
+                                    return Ok(Input::Balance { user: string_to_user_id(&args[0]) })
                                 }
 
                             _ =>
                                 {
-                                    Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                                    return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
                                 }
                         }
 
@@ -151,6 +143,18 @@ impl Input
                         else
                         {
                             Ok(Input::LoadWallet { path : args[0].clone() })
+                        }
+                    }
+
+                "genwallet" =>
+                    {
+                        if args.len()!= 1
+                        {
+                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                        }
+                        else
+                        {
+                            Ok(Input::GenWallet { path : args[0].clone() })
                         }
                     }
                 _ =>

@@ -1,6 +1,6 @@
-use crate::base_types::ComprPubKey
+use crate::base_types::ComprPubKey;
 
-pub fn string_from_compr_pub_key(pub_key : ComprPubKey) -> String {
+pub fn string_from_compr_pub_key(pub_key : &ComprPubKey) -> String {
 
     let mut result = String::new();
     for el in pub_key {
@@ -12,7 +12,7 @@ pub fn string_from_compr_pub_key(pub_key : ComprPubKey) -> String {
     result
 
 }
-pub fn comp_pub_key_from_string(string_pub_key : String) -> ComprPubKey {
+pub fn comp_pub_key_from_string(string_pub_key : &String) -> [u8;32] {
 
     let mut result : [u8;32] = [0;32];
     for i in 0..32 {
@@ -21,5 +21,5 @@ pub fn comp_pub_key_from_string(string_pub_key : String) -> ComprPubKey {
         result[i] = el1 + (el2 << 4);
     }
 
-    result as ComprPubKey
+    result
 }

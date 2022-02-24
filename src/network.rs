@@ -167,7 +167,7 @@ pub fn transfer_request(stream : &mut  Option<TcpStream>, transfer : Instruction
 {
     // Make sure the client is connected to the network
     connect_to_network(stream);
-
+    println!("OKK");
     match stream
     {
         Some(tcpstream) =>

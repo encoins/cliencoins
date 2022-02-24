@@ -55,8 +55,10 @@ pub(crate) fn show_help()
         "\n\n\
         =================================================================================================================================================================================\n\n\
         Available commands : \n\
-        \t• transfer <account1> <account2> <amount> <signature> : Makes transaction request of <amount> coins from account <account1> to account <account2> \n\
+        \t• transfer <user> <amount>                            : Makes transaction request of <amount> coins to user <user> \n\
         \t• balance <according-to>                              : Displays all current balances according to account <according-to>\n\
+        \t• ldwallet <path-to-wallet>                           : Loads a public key and secret key from a .wallet file\n\
+        \t• genwallet <name>                                    : Generates and loads a new wallet and saves it to the given path\n\
         \t• clear                                               : Clears terminal from previous entered instructions \n\
         \t• help                                                : Displays the list of possible instructions \n\
         \t• quit                                                : Quits program\n\

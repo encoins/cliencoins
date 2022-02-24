@@ -2,7 +2,6 @@ use ed25519_dalek::{Keypair, Signer};
 use crate::base_types::{Transfer};
 use crate::instructions::Instruction;
 
-
 impl Transfer {
 
     pub fn sign(self, secret_key : &Keypair) -> Instruction {
@@ -14,3 +13,5 @@ impl Transfer {
         }
     }
 }
+
+
