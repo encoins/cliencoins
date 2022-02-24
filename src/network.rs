@@ -119,7 +119,7 @@ pub fn connect_to_network(stream: &mut Option<TcpStream>)
                 let hash_net_config = yaml_to_hash("net_config.yml");
                 let nb_nodes = read_network_parameters(&hash_net_config);
 
-                for i in 0..nb_nodes
+                for i in 1..nb_nodes+1
                 {
                     let id_node = i;
                     let address = read_server_address(&hash_net_config, id_node);
@@ -167,7 +167,6 @@ pub fn transfer_request(stream : &mut  Option<TcpStream>, transfer : Instruction
 {
     // Make sure the client is connected to the network
     connect_to_network(stream);
-    println!("OKK");
     match stream
     {
         Some(tcpstream) =>

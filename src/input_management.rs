@@ -1,6 +1,7 @@
 use std::io;
 use std::io::Write;
 use std::net::TcpStream;
+use std::ptr::slice_from_raw_parts;
 use rand::rngs::OsRng;
 use ed25519_dalek::ed25519::signature::SignerMut;
 use ed25519_dalek::Keypair;
@@ -53,8 +54,17 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
                     Some(keypairs) =>
                         {
                             let sgn_transfer = transfer.sign(keypairs);
-                            strings_to_show.push(format!("Everything is good. Making the transfer request of {} encoins to user {} ", amount, user_id_to_string(&recipient)));
-                            transfer_request(stream, sgn_transfer);
+                            match transfer_request(stream, sgn_transfer)
+                            {
+                                true =>
+                                    {
+                                        strings_to_show.push(format!("Everything is good. Making the transfer request of {} encoins to user {} ", amount, user_id_to_string(&recipient)));
+                                    }
+                                false =>
+                                    {
+                                        strings_to_show.push(String::from("Could not connect to a server ! "));
+                                    }
+                            }
                         }
                 }
 
@@ -77,7 +87,10 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
             {
                 match ask_balance(user,stream)
                 {
-                    true => {}
+                    true =>
+                        {
+                            strings_to_show.push(String::from("TEST!"));
+                        }
                     false =>
                         {
                            strings_to_show.push(String::from("Could not connect to a server!"));
