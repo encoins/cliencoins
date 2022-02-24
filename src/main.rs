@@ -11,6 +11,7 @@ mod ui;
 mod input_management;
 mod transfer;
 mod utils;
+mod pub_key_converter;
 
 use std::fs::read;
 use std::net::TcpStream;
