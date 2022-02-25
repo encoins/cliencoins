@@ -12,8 +12,8 @@ pub fn string_from_compr_pub_key(pub_key : &ComprPubKey) -> String {
     result
 
 }
-pub fn comp_pub_key_from_string(string_pub_key : &String) -> [u8;32] {
-
+pub fn comp_pub_key_from_string(string_pub_key : &String) -> Result<[u8;32],String>
+{
     let mut result : [u8;32] = [0;32];
     for i in 0..32 {
         let el1 = string_pub_key.as_bytes()[2*i] - b"a".get(0).unwrap();
@@ -21,5 +21,5 @@ pub fn comp_pub_key_from_string(string_pub_key : &String) -> [u8;32] {
         result[i] = el1 + (el2 << 4);
     }
 
-    result
+    Ok(result)
 }

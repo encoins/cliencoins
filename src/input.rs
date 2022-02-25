@@ -1,11 +1,8 @@
 //! Definition of the input enum defining regular inputs
 
 use crate::base_types::{Currency, UserId};
-use std::io;
 use crate::utils::{string_to_user_id};
-use std::io::Write;
 use ed25519_dalek::{Keypair, PublicKey};
-use serde::de::Unexpected::Str;
 
 /// An input can either be a transfer or balance request or an interaction with the GUI
 pub enum Input
@@ -65,9 +62,24 @@ impl Input
                                     }
                                 Some(key) =>
                                     {
-                                        let recipient_key : PublicKey = PublicKey::from_bytes(string_to_user_id(&args[0]).as_ref()).unwrap();
-                                        let amount : u32 = args[1].parse().unwrap();
-                                        Ok( Input::Transfer {sender: key.public.to_bytes(), recipient: recipient_key.to_bytes(), amount: amount } )
+                                        let parsed_uid = match string_to_user_id(&args[0])
+                                        {
+                                            Ok(uid) => { uid }
+                                            Err(err) => { return  Err(err) }
+                                        };
+
+                                        let recipient_key : PublicKey = match PublicKey::from_bytes(parsed_uid.as_ref())
+                                        {
+                                            Ok(pk) => { pk }
+                                            Err(_) => {return Err(String::from("Please enter a valid public key for the recipient of the transfer")) }
+                                        };
+                                        let amount : u32 = match args[1].parse()
+                                        {
+                                            Ok(number) => { number }
+                                            Err(_) => { return Err(String::from("Please enter a valid 32 bit unsigned integer for the amount of the transfer!")) }
+                                        };
+
+                                        Ok( Input::Transfer {sender: key.public.to_bytes(), recipient: recipient_key.to_bytes(), amount } )
                                     }
                             }
 
@@ -123,7 +135,12 @@ impl Input
                                 }
                             1 =>
                                 {
-                                    return Ok(Input::Balance { user: string_to_user_id(&args[0]) })
+                                    match string_to_user_id(&args[0])
+                                    {
+                                        Ok(uid) => { Ok(Input::Balance {user: uid}) }
+                                        Err(err) => { Err(err) }
+                                    }
+
                                 }
 
                             _ =>
@@ -167,6 +184,7 @@ impl Input
 
 }
 
+/*
 fn parse_args_as<T: std::str::FromStr>(args: Vec<String>) -> Result<Vec<T>, String>
 {
     let mut ars: Vec<T> = vec![];
@@ -185,3 +203,4 @@ fn parse_args_as<T: std::str::FromStr>(args: Vec<String>) -> Result<Vec<T>, Stri
 
     return Ok(ars)
 }
+*/

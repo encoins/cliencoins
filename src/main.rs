@@ -1,7 +1,6 @@
 mod input;
 mod base_types;
 mod network;
-mod crypto;
 mod client;
 mod instructions;
 mod message;
@@ -13,17 +12,14 @@ mod transfer;
 mod utils;
 mod pub_key_converter;
 
-use std::fs::read;
 use std::net::TcpStream;
-use std::io::{Write, Read, stdin, stdout};
 use crate::base_types::UserId;
 use crate::input::Input;
 use std::env;
 use ed25519_dalek::Keypair;
-use serde::Serialize;
 use crate::input_management::{deal_with_input, parse_input};
-use crate::ui::{print_logo, show_terminal};
-use crate::utils::{loadKeyPair, user_id_to_string};
+use crate::ui::{show_terminal};
+use crate::utils::{load_key_pair, user_id_to_string};
 
 
 fn main()
@@ -39,7 +35,7 @@ fn main()
         None => { None }
         Some(path ) =>
             {
-                match loadKeyPair(path)
+                match load_key_pair(path)
                 {
                     Ok(kp) =>
                         {

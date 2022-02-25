@@ -1,5 +1,5 @@
 parameters:
-  nb_servers: 3
+  nb_servers: 4
 
 server1:
   address: localhost

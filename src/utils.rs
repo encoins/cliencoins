@@ -2,12 +2,11 @@ use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
-use std::ptr::null;
-use ed25519_dalek::{Keypair, PublicKey, SecretKey};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, SignatureError};
 use crate::pub_key_converter::{comp_pub_key_from_string, string_from_compr_pub_key};
 use crate::UserId;
 
-pub fn loadKeyPair(path : &String) -> Result<Keypair,String>
+pub fn load_key_pair(path : &String) -> Result<Keypair,String>
 {
 
     let file_ext = get_extension_from_filename(path);
@@ -30,17 +29,37 @@ pub fn loadKeyPair(path : &String) -> Result<Keypair,String>
             }
     }
     let mut pub_key = Default::default();
-    let mut buf = BufReader::new(File::open(path).unwrap());
+    let file = match File::open(path)
+    {
+        Ok(f) => { f }
+        Err(_) => { return Err(format!("Could not find file {}. (The given file should be of type *.wallet) ", path)) }
+    };
+    let buf = BufReader::new(file);
     let mut line_nb = 0;
     for lines in buf.lines()
     {
         if line_nb == 0
         {
-            pub_key = PublicKey::from_bytes(string_to_user_id(&lines.unwrap()).as_ref()).unwrap();
+            match string_to_user_id(&lines.unwrap())
+            {
+                Ok(uid) =>
+                    {
+                        pub_key = match PublicKey::from_bytes(uid.as_ref())
+                        {
+                            Ok( pk ) => { pk }
+                            Err(e) => { return Err(e.to_string()) }
+                        };
+                    }
+                Err(err) => { return Err(err) }
+            }
         }
         else if line_nb == 1
         {
-            let sec_key = string_to_secret_key(&lines.unwrap());
+            let sec_key =  match string_to_secret_key(&lines.unwrap())
+            {
+                Ok(sk) => {  sk }
+                Err(err) => {  return Err(err) }
+            };
             return Ok(Keypair{ secret: sec_key, public: pub_key })
 
         }
@@ -60,7 +79,7 @@ pub fn loadKeyPair(path : &String) -> Result<Keypair,String>
 }
 
 
-pub fn exportKeyPair(path : &String, keypair : &Keypair)
+pub fn export_key_pair(path : &String, keypair : &Keypair)
 {
     let final_path = format!("{}{}", path, ".wallet");
     let mut file = File::create(final_path).unwrap();
@@ -77,7 +96,7 @@ pub fn exportKeyPair(path : &String, keypair : &Keypair)
     string_from_compr_pub_key(user)
 }
 
-pub fn string_to_user_id(str : &String) -> UserId
+pub fn string_to_user_id(str : &String) -> Result<UserId,String>
 {
     comp_pub_key_from_string(str)
 }
@@ -87,9 +106,19 @@ fn secrete_key_to_string(sec_key : &SecretKey) -> String
     string_from_compr_pub_key(&sec_key.to_bytes())
 }
 
-fn string_to_secret_key(str : &String) -> SecretKey
+fn string_to_secret_key(str : &String) -> Result<SecretKey, String>
 {
-    SecretKey::from_bytes(comp_pub_key_from_string(str).as_ref()).unwrap()
+    let key = match comp_pub_key_from_string(str)
+    {
+        Ok(k) => {k}
+        Err(s) => { return Err(s) }
+    };
+
+    match SecretKey::from_bytes( key.as_ref() )
+    {
+        Ok(sec_key) => { Ok(sec_key) }
+        Err(e) => { Err(e.to_string()) }
+    }
 }
 
 fn get_extension_from_filename(path: &str) -> Option<&str> {

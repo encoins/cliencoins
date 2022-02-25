@@ -1,16 +1,11 @@
 use std::io;
-use std::io::Write;
 use std::net::TcpStream;
-use std::ptr::slice_from_raw_parts;
 use rand::rngs::OsRng;
-use ed25519_dalek::ed25519::signature::SignerMut;
 use ed25519_dalek::Keypair;
 use crate::{Input, ui};
 use crate::base_types::Transfer;
 use crate::network::{ask_balance, transfer_request};
-use crate::ui::show_terminal;
-use crate::utils::{exportKeyPair, loadKeyPair, user_id_to_string};
-use crate::transfer;
+use crate::utils::{export_key_pair, load_key_pair, user_id_to_string};
 
 /// Parses an input from terminal and returns an Input
 pub fn parse_input(user_keypair : &Option<Keypair>) -> Result<Input, String>
@@ -38,7 +33,7 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
     {
         Input::Transfer { sender, recipient, amount } =>
             {
-                let mut transfer = Transfer
+                let transfer = Transfer
                 {
                     sender,
                     recipient,
@@ -99,7 +94,7 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
             }
         Input::LoadWallet { path} =>
             {
-                match loadKeyPair(&path)
+                match load_key_pair(&path)
                 {
                     Ok(keypairs) =>
                         {
@@ -114,7 +109,7 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
             {
                 let mut csprng = OsRng{};
                 let keypair: Keypair = Keypair::generate(&mut csprng);
-                exportKeyPair(&path, &keypair );
+                export_key_pair(&path, &keypair );
                 strings_to_show.push(format!("Successfully generate the wallet {}. The wallet has also been loaded as current wallet.", path));
                 user_keypairs.replace(keypair);
             }

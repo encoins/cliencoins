@@ -1,6 +1,5 @@
 use std::fmt::{Display, Formatter};
-use ed25519_dalek::PublicKey;
-use crate::base_types::{Currency, Transfer, UserId};
+use crate::base_types::{Transfer, UserId};
 use serde::Serialize;
 use crate::utils::user_id_to_string;
 
@@ -24,7 +23,7 @@ impl Display for Instruction
         match self
         {
             Instruction::Balance {user} => { write!(f, " Balances of {}", user_id_to_string(user)) }
-            Instruction::SignedTransfer {transfer, signature} => { write!(f, "New transfer : (sender : {}, recipient :{}, amount {})", user_id_to_string( &transfer.sender) , user_id_to_string(&transfer.recipient), transfer.amount) }
+            Instruction::SignedTransfer {transfer, signature:_} => { write!(f, "New transfer : (sender : {}, recipient :{}, amount {})", user_id_to_string( &transfer.sender) , user_id_to_string(&transfer.recipient), transfer.amount) }
 
         }
     }
