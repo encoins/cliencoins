@@ -29,7 +29,10 @@ fn main()
 
     // Vector containing additional strings to be outputted on screen under the logo
     let mut additional_strings = vec![];
+    // Current TcpStream used to communicate with one of the servers
     let mut stream : Option<TcpStream> = None;
+
+    // Current Keypair (User). Can be None if no user is connected
     let mut user_keypair : Option<Keypair> = match args.get(1)
     {
         None => { None }
@@ -51,12 +54,10 @@ fn main()
             }
     };
 
-
+    // Main loop where we juste wait for inputs and deal with them
     loop
     {
-        show_terminal(&mut additional_strings);
-        let input = parse_input(&user_keypair);
-        match input
+        match parse_input(&user_keypair)
         {
             Ok(inp) =>
                 {

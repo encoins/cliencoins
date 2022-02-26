@@ -8,199 +8,182 @@ use ed25519_dalek::{Keypair, PublicKey};
 pub enum Input
 {
 
+    /// Ask for a money transfer
     Transfer{ sender : UserId, recipient: UserId, amount : Currency },
-    /// Input to get transactions history of an account according to a given account
-    Help,
-    /// Input to clear terminal from previous inputs
-    Clear,
-    /// Input to quit program
-    Quit,
+    /// Get the balance of a given user
     Balance { user : UserId },
+    /// Load an encoins wallet
     LoadWallet { path : String},
-    GenWallet { path : String}
+    /// Generate an encoins wallet
+    GenWallet { path : String},
+    /// Get help screen
+    Help,
+    /// Clear terminal from previous inputs
+    Clear,
+    /// Quit program
+    Quit
+
 
 }
 
 impl Input
 {
+
     const WRONG_AMOUNT_OF_ARGS: &'static str = "Wrong amount of arguments! (Type \"help\" to see how to use command)";
 
+    /// Builds an [`Input`] from an array of strings and an optional [`Keypair`]
+    /// # Errors
+    /// This function will return an error if the given string vector is empty or if it did not manage
+    /// to parse the content of the given vector. It will also return an error if the user is trying
+    /// to make a transfer and no keypair was given.
     pub fn from(value: &Vec<&str>, sender_keypair: &Option<Keypair>) -> Result<Input,String>
     {
         let mut args = vec![];
-        return if value.len() == 0
-        {
-            Err(String::from("No command entered! Type \"help\" to get a list of possible commands"))
-        } else {
-            for k in 1..value.len()
+        return
+            if value.len() == 0
             {
-                let word = String::from(value[k].trim());
-                args.push(word);
+                Err(String::from("No command entered! Type \"help\" to get a list of possible commands"))
             }
-
-            // Transforms first argument to lowercase
-            let value_lc = &value[0].to_lowercase()[..];
-
-            match value_lc
+            else
             {
+                for k in 1..value.len()
+                {
+                    let word = String::from(value[k].trim());
+                    args.push(word);
+                }
 
+                // Transforms first argument to lowercase
+                let value_lc = &value[0].to_lowercase()[..];
 
-                "transfer" =>
-                    {
-                        if args.len() != 2
+                match value_lc
+                {
+                    "transfer" =>
                         {
-                            return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        }
-                        else
-                        {
-
-                            match sender_keypair
+                            if args.len() != 2
                             {
-                                None =>
+                                return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                match sender_keypair
+                                {
+                                    None =>
+                                        {
+                                            return Err(String::from("Please load a wallet before trying to make a transfer!"))
+                                        }
+                                    Some(key) =>
+                                        {
+                                            let parsed_uid = match string_to_user_id(&args[0])
+                                            {
+                                                Ok(uid) => { uid }
+                                                Err(err) => { return Err(err) }
+                                            };
+
+                                            let recipient_key: PublicKey = match PublicKey::from_bytes(parsed_uid.as_ref())
+                                            {
+                                                Ok(pk) => { pk }
+                                                Err(_) => { return Err(String::from("Please enter a valid public key for the recipient of the transfer")) }
+                                            };
+                                            let amount: u32 = match args[1].parse()
+                                            {
+                                                Ok(number) => { number }
+                                                Err(_) => { return Err(String::from("Please enter a valid 32 bit unsigned integer for the amount of the transfer!")) }
+                                            };
+
+                                            Ok(Input::Transfer { sender: key.public.to_bytes(), recipient: recipient_key.to_bytes(), amount })
+                                        }
+                                }
+                            }
+                        }
+
+                    "help" =>
+                        {
+                            if args.len() != 0
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::Help)
+                            }
+                        }
+                    "clear" =>
+                        {
+                            if args.len() != 0
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::Clear)
+                            }
+                        }
+                    "quit" =>
+                        {
+                            if args.len() != 0
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::Quit)
+                            }
+                        }
+
+                    "balance" =>
+                        {
+                            match args.len()
+                            {
+                                0 =>
                                     {
-                                        return Err( String::from("Please load a wallet before trying to make a transfer!") )
+                                        match sender_keypair
+                                        {
+                                            None =>
+                                                {
+                                                    return Err(String::from("Please load a wallet or explicit a public key from which you want to know the balance !"))
+                                                }
+                                            Some(key) =>
+                                                {
+                                                    return Ok(Input::Balance { user: key.public.to_bytes() })
+                                                }
+                                        }
                                     }
-                                Some(key) =>
+                                1 =>
                                     {
-                                        let parsed_uid = match string_to_user_id(&args[0])
+                                        match string_to_user_id(&args[0])
                                         {
-                                            Ok(uid) => { uid }
-                                            Err(err) => { return  Err(err) }
-                                        };
+                                            Ok(uid) => { Ok(Input::Balance { user: uid }) }
+                                            Err(err) => { Err(err) }
+                                        }
+                                    }
 
-                                        let recipient_key : PublicKey = match PublicKey::from_bytes(parsed_uid.as_ref())
-                                        {
-                                            Ok(pk) => { pk }
-                                            Err(_) => {return Err(String::from("Please enter a valid public key for the recipient of the transfer")) }
-                                        };
-                                        let amount : u32 = match args[1].parse()
-                                        {
-                                            Ok(number) => { number }
-                                            Err(_) => { return Err(String::from("Please enter a valid 32 bit unsigned integer for the amount of the transfer!")) }
-                                        };
-
-                                        Ok( Input::Transfer {sender: key.public.to_bytes(), recipient: recipient_key.to_bytes(), amount } )
+                                _ =>
+                                    {
+                                        return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
                                     }
                             }
-
-
                         }
-                    }
 
-                "help" =>
-                    {
-                        if args.len() != 0
+                    "ldwallet" =>
                         {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Help)
+                            if args.len() != 1
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::LoadWallet { path: args[0].clone() })
+                            }
                         }
-                    }
-                "clear" =>
-                    {
-                        if args.len() != 0
+
+                    "genwallet" =>
                         {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Clear)
+                            if args.len() != 1
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            }
+                            else
+                            {
+                                Ok(Input::GenWallet { path: args[0].clone() })
+                            }
                         }
-                    }
-                "quit" =>
-                    {
-                        if args.len() != 0
+
+                    _ =>
                         {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Quit)
+                            Err(String::from("The typed command could not be recognised! (Type \"help\" to get a list of possible commands)"))
                         }
-                    }
-
-                "balance" =>
-                    {
-                        match args.len()
-                        {
-                            0 =>
-                                {
-                                    match sender_keypair
-                                    {
-                                        None =>
-                                            {
-                                                return Err(String::from("Please load a wallet or explicit a public key from which you want to know the balance !"))
-                                            }
-                                        Some(key) =>
-                                            {
-                                                return Ok(Input::Balance {user: key.public.to_bytes()})
-                                            }
-                                    }
-                                }
-                            1 =>
-                                {
-                                    match string_to_user_id(&args[0])
-                                    {
-                                        Ok(uid) => { Ok(Input::Balance {user: uid}) }
-                                        Err(err) => { Err(err) }
-                                    }
-
-                                }
-
-                            _ =>
-                                {
-                                    return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                                }
-                        }
-
-                    }
-
-                "ldwallet" =>
-                    {
-                        if args.len()!= 1
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        }
-                        else
-                        {
-                            Ok(Input::LoadWallet { path : args[0].clone() })
-                        }
-                    }
-
-                "genwallet" =>
-                    {
-                        if args.len()!= 1
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        }
-                        else
-                        {
-                            Ok(Input::GenWallet { path : args[0].clone() })
-                        }
-                    }
-                _ =>
-                    {
-                        Err(String::from("The typed command could not be recognised! (Type \"help\" to get a list of possible commands)"))
-                    }
-            }
-        }
-    }
-
-}
-
-/*
-fn parse_args_as<T: std::str::FromStr>(args: Vec<String>) -> Result<Vec<T>, String>
-{
-    let mut ars: Vec<T> = vec![];
-    for tmp_arg in args
-    {
-        let arg: T = match tmp_arg.parse()
-        {
-            Ok(obj) => obj,
-            Err(_) =>
-                {
-                    return Err(String::from("Arguments have the wrong type! (Type \"help\" to see how to use command)"))
                 }
-        };
-        ars.push(arg);
+            }
     }
-
-    return Ok(ars)
 }
-*/
+

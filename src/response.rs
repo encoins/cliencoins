@@ -14,8 +14,8 @@ impl Response {
     {
         match self
         {
-            Response::Balance(amount) => { println!("Balance of {} ENcoinS)",amount) }
-            Response::Transfer(true,_) => { println!("Transfer succeeded") }
+            Response::Balance(amount) => { println!("Balance of {} ENcoinS",amount) }
+            Response::Transfer(true,_) => { println!("The server initiated ") }
             Response::Transfer(false,1) => { println!("The server refused to start the transfer because the signature is not correct") }
             Response::Transfer(false,2) => { println!("The server refused to start the transfer because you don't have enough money on your account") }
             Response::Transfer(false,3) => { println!("The server refused to start a new transfer because it have not validated your previous one") }

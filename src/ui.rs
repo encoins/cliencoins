@@ -1,7 +1,8 @@
+//! Deals with the terminal UI
 use std::io;
 use std::io::Write;
 
-/// Prints the terminal GUI
+/// Prints the terminal UI
 pub fn show_terminal(strings_to_show : &Vec<String>)
 {
     print!("{esc}c", esc = 27 as char);
@@ -47,6 +48,7 @@ pub fn print_logo()
          \n=================================================================================================================================================================================");
 }
 
+/// Shows the help menu
 pub(crate) fn show_help()
 {
     print!("{esc}c", esc = 27 as char);

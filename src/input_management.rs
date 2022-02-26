@@ -5,7 +5,7 @@ use ed25519_dalek::Keypair;
 use crate::{Input, ui};
 use crate::base_types::Transfer;
 use crate::instructions::Instruction;
-use crate::network::{ask_balance, send_instruction, transfer_request};
+use crate::network::{ send_instruction };
 use crate::utils::{export_key_pair, load_key_pair, user_id_to_string};
 
 /// Parses an input from terminal and returns an Input
@@ -28,6 +28,7 @@ pub fn parse_input(user_keypair : &Option<Keypair>) -> Result<Input, String>
     Input::from(&words, user_keypair)
 }
 
+/// Deals with a given input
 pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream: &mut Option<TcpStream>, user_keypairs: &mut Option<Keypair>)
 {
     match input

@@ -1,5 +1,6 @@
 use crate::base_types::ComprPubKey;
 
+/// Converts a public key into a string format
 pub fn string_from_compr_pub_key(pub_key : &ComprPubKey) -> String {
 
     let mut result = String::new();
@@ -10,8 +11,9 @@ pub fn string_from_compr_pub_key(pub_key : &ComprPubKey) -> String {
         result.push((el2 + b"a".get(0).unwrap()) as char);
     }
     result
-
 }
+
+/// Converts a public key in a string format into a public key in bytes format
 pub fn comp_pub_key_from_string(string_pub_key : &String) -> Result<[u8;32],String>
 {
     let mut result : [u8;32] = [0;32];
