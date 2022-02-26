@@ -1,104 +1,92 @@
-use std::fs::read;
-use std::net::{TcpStream,SocketAddr};
-use std::io::{Write, Read, stdin, stdout};
-use crate::client::Client;
-use crate::instructions::{Transfer};
-use bincode::deserialize;
+//! Deals with communications with the encoins network
+
+use std::net::{TcpStream};
+use std::io::{Write,Read};
 use crate::yaml::*;
-use std::process::exit;
-
-
-
-use crate::input::{Input,read_input};
 use crate::instructions::Instruction;
 use crate::response::Response;
+use bincode::deserialize;
 
-pub fn exchange_with_server(client : &Client, mut stream: TcpStream) { // je suis tenté de le faire en impl de Client
-    let stdout = std::io::stdout();
-    let mut io = stdout.lock();
-    let mut buf = [0; 100]; // the first to discrimine read/transfer then 3 element of type u32
-
-    println!("Enter 'quit' when you want to leave");
-    loop {
-        //write!(io, "> ");
-        // pour afficher de suite
-        //io.flush();
-        match read_input() {
-            Input::Transfer { sender, recipient, amount } => {
-
-                let transfer : Transfer = Transfer{sender,recipient,amount};
-
-                let serialized_transfer = &(bincode::serialize(&transfer).unwrap()[..]);
-
-                let signed_transfer = transfer.sign_transfer(&client.secret_key);
-
-                let msg = &(bincode::serialize(&signed_transfer).unwrap()[..]);
-                println!("msg : {:?}",msg);
-                stream.write(msg);
-
-            }
-            Input::Balance { user } => {
-                let msg = &(bincode::serialize(&Instruction::Balance {user}).unwrap()[..]);
-                stream.write(msg);
-            }
-            /// Input to get transactions history of an account according to a given account
-            Input::Help => {
-                return;
-            }
-            /// Input to clear terminal from previous inputs
-            Input::Clear => {
-                return;
-            }
-            /// Input to quit program
-            Input::Quit => {
-                println!("bye !");
-                exit(1);
-            }
-        }
-        match stream.read(&mut buf) {
-            Ok(received) => {
-                if received < 1 {
-                    println!("Perte de la connexion avec le serveur");
-                    return;
+/// Connects the client to the network using network parameters given in the `net_config.yml` file
+pub fn connect_to_network(stream: &mut Option<TcpStream>)
+{
+    // Checks if the given stream exists and is still alive
+    match stream
+    {
+        Some(tcp) =>
+            {
+                // Checks if the stream is still alive
+                match tcp.write("".as_ref())
+                {
+                    Ok(_) =>
+                        {
+                            // Returns here only if the stream is alive
+                            return;
+                        }
+                    Err(_) => {}
                 }
             }
-            Err(_) => {
-                println!("Perte de la connexion avec le serveur");
-                return;
-            }
+        None    => {}
+    }
+
+    let hash_net_config = yaml_to_hash("net_config.yml");
+    let nb_nodes = read_network_parameters(&hash_net_config);
+
+    // Tries to connect to each server until it achieves to do so.
+    for i in 1..nb_nodes+1
+    {
+        let id_node = i;
+        let address = read_server_address(&hash_net_config, id_node);
+        println!("Trying to connect to node {}...", id_node);
+
+        let temp_stream = TcpStream::connect(address);
+        match temp_stream
+        {
+            Ok(str) =>
+                {
+
+                    stream.replace(str);
+                    return;
+                }
+            Err(_) =>
+                {
+                    println!("Connection to node {} failed", id_node);
+                }
         }
-        let response : Response = deserialize(&buf[..]).unwrap();
-        response.print();
-        //println!("Réponse du serveur : {:?}", buf);
+
     }
 }
 
-fn get_entry() -> String {
-    let mut buf = String::new();
+/// Sends an instruction given by the client to a server
+pub fn send_instruction(stream : &mut Option<TcpStream>, instruction : Instruction) -> Response
+{
+    let mut buf = [0; 100];
+    // Makes sure the client is connected to a server
+    connect_to_network(stream);
+    match stream
+    {
+        Some(tcpstream) =>
+            {
 
-    stdin().read_line(&mut buf);
-    buf.replace("\n", "").replace("\r", "")
-}
+                let msg = &(bincode::serialize(&instruction).unwrap()[..]);
+                tcpstream.write(msg);
 
-pub fn connect_to_serv(client : &Client) {
-    
-    let hash_net_config = yaml_to_hash("net_config.yml"); 
-    let nb_servers = read_network_parameters(&hash_net_config);       
-    
-    for i in 0..nb_servers {
-        let id_server = (client.id+i)%nb_servers + 1;
-        let addr = read_server_address(&hash_net_config, id_server);
-        println!("Tentative de connexion au serveur {}...", id_server);
+                match tcpstream.read(&mut buf) {
+                    Ok(received) => {
+                        if received < 1 {
+                           return  Response::RcvErr;
+                        }
+                    }
+                    Err(_) => {
+                        return Response::RcvErr;
+                    }
 
-        match TcpStream::connect(addr) {
-            Ok(stream) => {
-                println!("Connexion au serveur réussie !");
-                exchange_with_server(client,stream);
+                }
+                let response : Response = deserialize(&buf[..]).unwrap();
+                response
+
             }
-            Err(e) => {
-                println!("La connexion au serveur a échoué : {}", e);
-            }
-        }
+        None => { Response::SendErr }
     }
-    println!("Aucun serveur n'est disponible :(")
+
 }

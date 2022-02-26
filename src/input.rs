@@ -1,163 +1,189 @@
 //! Definition of the input enum defining regular inputs
 
 use crate::base_types::{Currency, UserId};
-use std::io;
-use std::io::Write;
+use crate::utils::{string_to_user_id};
+use ed25519_dalek::{Keypair, PublicKey};
 
-/// An input can be either a request to make two Processus interact or to interact with the GUI
+/// An input can either be a transfer or balance request or an interaction with the GUI
 pub enum Input
 {
 
+    /// Ask for a money transfer
     Transfer{ sender : UserId, recipient: UserId, amount : Currency },
-    /// Input to get transactions history of an account according to a given account
-    Help,
-    /// Input to clear terminal from previous inputs
-    Clear,
-    /// Input to quit program
-    Quit,
+    /// Get the balance of a given user
     Balance { user : UserId },
+    /// Load an encoins wallet
+    LoadWallet { path : String},
+    /// Generate an encoins wallet
+    GenWallet { path : String},
+    /// Get help screen
+    Help,
+    /// Clear terminal from previous inputs
+    Clear,
+    /// Quit program
+    Quit
+
+
 }
 
 impl Input
 {
+
     const WRONG_AMOUNT_OF_ARGS: &'static str = "Wrong amount of arguments! (Type \"help\" to see how to use command)";
 
-    pub fn from(value: &Vec<&str>) -> Result<Input,String>
+    /// Builds an [`Input`] from an array of strings and an optional [`Keypair`]
+    /// # Errors
+    /// This function will return an error if the given string vector is empty or if it did not manage
+    /// to parse the content of the given vector. It will also return an error if the user is trying
+    /// to make a transfer and no keypair was given.
+    pub fn from(value: &Vec<&str>, sender_keypair: &Option<Keypair>) -> Result<Input,String>
     {
         let mut args = vec![];
-        return if value.len() == 0
-        {
-            Err(String::from("No command entered! Type \"help\" to get a list of possible commands"))
-        } else {
-            for k in 1..value.len()
+        return
+            if value.len() == 0
             {
-                let word = String::from(value[k]);
-                let arg: u32 = match word.trim().parse()
+                Err(String::from("No command entered! Type \"help\" to get a list of possible commands"))
+            }
+            else
+            {
+                for k in 1..value.len()
                 {
-                    Ok(num) => num,
-                    Err(_) =>
+                    let word = String::from(value[k].trim());
+                    args.push(word);
+                }
+
+                // Transforms first argument to lowercase
+                let value_lc = &value[0].to_lowercase()[..];
+
+                match value_lc
+                {
+                    "transfer" =>
                         {
-                            return Err(String::from("Arguments should be non negative numbers! (Type \"help\" to see how to use command)"));
+                            if args.len() != 2
+                            {
+                                return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                match sender_keypair
+                                {
+                                    None =>
+                                        {
+                                            return Err(String::from("Please load a wallet before trying to make a transfer!"))
+                                        }
+                                    Some(key) =>
+                                        {
+                                            let parsed_uid = match string_to_user_id(&args[0])
+                                            {
+                                                Ok(uid) => { uid }
+                                                Err(err) => { return Err(err) }
+                                            };
+
+                                            let recipient_key: PublicKey = match PublicKey::from_bytes(parsed_uid.as_ref())
+                                            {
+                                                Ok(pk) => { pk }
+                                                Err(_) => { return Err(String::from("Please enter a valid public key for the recipient of the transfer")) }
+                                            };
+                                            let amount: u32 = match args[1].parse()
+                                            {
+                                                Ok(number) => { number }
+                                                Err(_) => { return Err(String::from("Please enter a valid 32 bit unsigned integer for the amount of the transfer!")) }
+                                            };
+
+                                            Ok(Input::Transfer { sender: key.public.to_bytes(), recipient: recipient_key.to_bytes(), amount })
+                                        }
+                                }
+                            }
                         }
-                };
-                args.push(arg);
+
+                    "help" =>
+                        {
+                            if args.len() != 0
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::Help)
+                            }
+                        }
+                    "clear" =>
+                        {
+                            if args.len() != 0
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::Clear)
+                            }
+                        }
+                    "quit" =>
+                        {
+                            if args.len() != 0
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::Quit)
+                            }
+                        }
+
+                    "balance" =>
+                        {
+                            match args.len()
+                            {
+                                0 =>
+                                    {
+                                        match sender_keypair
+                                        {
+                                            None =>
+                                                {
+                                                    return Err(String::from("Please load a wallet or explicit a public key from which you want to know the balance !"))
+                                                }
+                                            Some(key) =>
+                                                {
+                                                    return Ok(Input::Balance { user: key.public.to_bytes() })
+                                                }
+                                        }
+                                    }
+                                1 =>
+                                    {
+                                        match string_to_user_id(&args[0])
+                                        {
+                                            Ok(uid) => { Ok(Input::Balance { user: uid }) }
+                                            Err(err) => { Err(err) }
+                                        }
+                                    }
+
+                                _ =>
+                                    {
+                                        return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                                    }
+                            }
+                        }
+
+                    "ldwallet" =>
+                        {
+                            if args.len() != 1
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            } else {
+                                Ok(Input::LoadWallet { path: args[0].clone() })
+                            }
+                        }
+
+                    "genwallet" =>
+                        {
+                            if args.len() != 1
+                            {
+                                Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
+                            }
+                            else
+                            {
+                                Ok(Input::GenWallet { path: args[0].clone() })
+                            }
+                        }
+
+                    _ =>
+                        {
+                            Err(String::from("The typed command could not be recognised! (Type \"help\" to get a list of possible commands)"))
+                        }
+                }
             }
-
-            // Transforms first argument to lowercase
-            let value_lc = &value[0].to_lowercase()[..];
-
-            match value_lc
-            {
-
-
-                "transfer" =>
-                    {
-                        if args.len() != 3
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Transfer { sender: args[0], recipient: args[1], amount: args[2] })
-                        }
-                    }
-
-                "help" =>
-                    {
-                        if args.len() != 0
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Help)
-                        }
-                    }
-                "clear" =>
-                    {
-                        if args.len() != 0
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Clear)
-                        }
-                    }
-                "quit" =>
-                    {
-                        if args.len() != 0
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Quit)
-                        }
-                    }
-
-                "balance" =>
-                    {
-                        if args.len() != 1
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Balance { user: args[0] })
-                        }
-                    }
-/*
-                "reconnect" => {
-                    {
-                        if args.len() != 0
-                        {
-                            Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                        } else {
-                            Ok(Input::Reconnect{ addr : SocketAddr::from_str(args[0]) })
-                        }
-                    }
-                } */
-                _ =>
-                    {
-                        Err(String::from("The typed command could not be recognised! (Type \"help\" to get a list of possible commands)"))
-                    }
-            }
-        }
     }
-
 }
 
-
-
-
-pub fn read_input() -> Input{
-
-    // Save the line entered on the terminal in the string input_line
-
-    // Loops until no correct inputs has been entered
-    loop
-    {
-        let mut input_line = String::new();
-        let words: Vec<&str>;
-
-        io::stdin()
-            .read_line(&mut input_line)
-            .expect("Failed to read line");
-
-        // Deletion of the last character : '\n'
-        let len = input_line.len();
-
-        // Parsing of the input line as an op_type and an array args of arguments, managing the syntax errors
-        words = input_line[..len-1].split(' ').collect();
-
-        let input = Input::from(&words);
-
-
-        match input
-        {
-            Ok(input) =>
-                {
-                    return input
-                }
-            Err(string_error) =>
-                {
-                    // Print error message and ask for another input
-                    println!("{}", string_error);
-                    print!("> ");
-                    io::stdout().flush().unwrap()
-                }
-        }
-    }
-
-}
