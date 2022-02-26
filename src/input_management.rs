@@ -4,7 +4,8 @@ use rand::rngs::OsRng;
 use ed25519_dalek::Keypair;
 use crate::{Input, ui};
 use crate::base_types::Transfer;
-use crate::network::{ask_balance, transfer_request};
+use crate::instructions::Instruction;
+use crate::network::{ask_balance, send_instruction, transfer_request};
 use crate::utils::{export_key_pair, load_key_pair, user_id_to_string};
 
 /// Parses an input from terminal and returns an Input
@@ -48,18 +49,9 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
                         }
                     Some(keypairs) =>
                         {
-                            let sgn_transfer = transfer.sign(keypairs);
-                            match transfer_request(stream, sgn_transfer)
-                            {
-                                true =>
-                                    {
-                                        strings_to_show.push(format!("Everything is good. Making the transfer request of {} encoins to user {} ", amount, user_id_to_string(&recipient)));
-                                    }
-                                false =>
-                                    {
-                                        strings_to_show.push(String::from("Could not connect to a server ! "));
-                                    }
-                            }
+                            let instruction = transfer.sign(keypairs);
+                            let response = send_instruction(stream,instruction);
+                            strings_to_show.push(response.to_string());
                         }
                 }
 
@@ -80,17 +72,10 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
 
         Input::Balance { user } =>
             {
-                match ask_balance(user,stream)
-                {
-                    true =>
-                        {
-                            strings_to_show.push(String::from("TEST!"));
-                        }
-                    false =>
-                        {
-                           strings_to_show.push(String::from("Could not connect to a server!"));
-                        }
-                }
+                let instruction = Instruction::Balance {user};
+                let response = send_instruction(stream,instruction);
+                strings_to_show.push(response.to_string());
+
             }
         Input::LoadWallet { path} =>
             {

@@ -1,8 +1,11 @@
 use std::net::{TcpStream};
-use std::io::{Write};
+use std::io::{Write,Read};
 use crate::yaml::*;
 use crate::instructions::Instruction;
+use crate::response::Response;
 use crate::UserId;
+use bincode::deserialize;
+
 
 pub fn connect_to_network(stream: &mut Option<TcpStream>)
 {
@@ -40,40 +43,34 @@ pub fn connect_to_network(stream: &mut Option<TcpStream>)
     }
 }
 
-pub fn ask_balance(user: UserId, stream : &mut  Option<TcpStream> ) -> bool
+pub fn send_instruction(stream : &mut Option<TcpStream>, instruction : Instruction) -> Response
 {
-    // Make sure the client is connected to the network
-    connect_to_network(stream);
-
-    match stream
-    {
-        Some(tcpstream) =>
-            {
-                // Create the ask balance message and send it
-                let msg = &(bincode::serialize(&Instruction::Balance {user}).unwrap()[..]);
-                match tcpstream.write(msg)
-                {
-                    Ok(_) => {  true }
-                    Err(_) => {  false }
-                }
-            }
-        None => { false }
-    }
-}
-
-pub fn transfer_request(stream : &mut  Option<TcpStream>, transfer : Instruction) -> bool
-{
-    // Make sure the client is connected to the network
+    let mut buf = [0; 100];
     connect_to_network(stream);
     match stream
     {
         Some(tcpstream) =>
             {
-                // Create the transfer request and send it
-                let msg = &(bincode::serialize(&transfer).unwrap()[..]);
+
+                let msg = &(bincode::serialize(&instruction).unwrap()[..]);
                 tcpstream.write(msg);
-                true
+
+                match tcpstream.read(&mut buf) {
+                    Ok(received) => {
+                        if received < 1 {
+                           return  Response::RcvErr;
+                        }
+                    }
+                    Err(_) => {
+                        return Response::RcvErr;
+                    }
+
+                }
+                let response : Response = deserialize(&buf[..]).unwrap();
+                response
+
             }
-        None => { false }
+        None => { Response::SendErr }
     }
+
 }
