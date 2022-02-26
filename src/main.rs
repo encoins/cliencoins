@@ -1,9 +1,7 @@
 mod input;
 mod base_types;
 mod network;
-mod client;
 mod instructions;
-mod message;
 mod response;
 mod yaml;
 mod ui;
@@ -57,6 +55,7 @@ fn main()
     // Main loop where we juste wait for inputs and deal with them
     loop
     {
+        show_terminal(&additional_strings);
         match parse_input(&user_keypair)
         {
             Ok(inp) =>
