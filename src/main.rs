@@ -1,3 +1,5 @@
+extern crate core;
+
 mod input;
 mod base_types;
 mod network;
@@ -10,10 +12,11 @@ mod transfer;
 mod utils;
 mod pub_key_converter;
 
-use std::net::TcpStream;
 use crate::base_types::UserId;
 use crate::input::Input;
 use std::env;
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
 use ed25519_dalek::Keypair;
 use crate::input_management::{deal_with_input, parse_input};
 use crate::ui::{show_terminal};
@@ -27,8 +30,12 @@ fn main()
 
     // Vector containing additional strings to be outputted on screen under the logo
     let mut additional_strings = vec![];
+
     // Current TcpStream used to communicate with one of the servers
-    let mut stream : Option<TcpStream> = None;
+    // let mut stream : Option<TcpStream> = None;
+
+    // Sender/Receiver to deal with responses from servers
+    let (main_sender, main_receiver) : (Sender<String>, Receiver<String>) = mpsc::channel();
 
     // Current Keypair (User). Can be None if no user is connected
     let mut user_keypair : Option<Keypair> = match args.get(1)
@@ -60,14 +67,33 @@ fn main()
         {
             Ok(inp) =>
                 {
-                    deal_with_input(inp, &mut additional_strings, &mut stream, &mut user_keypair);
+                    deal_with_input(inp, &mut additional_strings, &main_sender, &mut user_keypair);
                 }
             Err(err) =>
                 {
                     additional_strings.push(err);
                 }
         }
+        update_responses(&mut additional_strings, &main_receiver);
 
     }
 
+}
+
+fn update_responses(additional_strings: &mut Vec<String>, main_receiver : &Receiver<String>)
+{
+    loop
+    {
+        match main_receiver.try_recv()
+        {
+            Ok(str) =>
+                {
+                    additional_strings.push(str);
+                }
+            Err(_) =>
+                {
+                    break;
+                }
+        }
+    }
 }

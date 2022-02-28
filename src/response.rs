@@ -2,7 +2,8 @@ use crate::base_types::Currency;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub enum Response {
+pub enum Response
+{
     Balance(Currency),
     Transfer(bool,u8),
     SendErr,

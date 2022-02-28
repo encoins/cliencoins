@@ -21,7 +21,9 @@ pub enum Input
     /// Clear terminal from previous inputs
     Clear,
     /// Quit program
-    Quit
+    Quit,
+    ///
+    None
 
 
 }
@@ -176,6 +178,10 @@ impl Input
                             {
                                 Ok(Input::GenWallet { path: args[0].clone() })
                             }
+                        }
+                    "" =>
+                        {
+                            Ok(Input::None)
                         }
 
                     _ =>

@@ -42,7 +42,7 @@ pub fn read_server_address(hash_net_config: &Hash, i: u32) -> (String, u16) {
         .as_i64()
         .expect("In yaml file, one port adress is not of int type")
         as u16;
-    println!("Connect to {} {}",ip,port_client);
+    //println!("Connect to {} {}",ip,port_client);
     (ip, port_client)
 }
 

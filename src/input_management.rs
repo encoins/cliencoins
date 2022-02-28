@@ -1,11 +1,10 @@
 use std::io;
-use std::net::TcpStream;
+use std::sync::mpsc::Sender;
 use rand::rngs::OsRng;
 use ed25519_dalek::Keypair;
 use crate::{Input, ui};
 use crate::base_types::Transfer;
-use crate::instructions::Instruction;
-use crate::network::{ send_instruction };
+use crate::network::{get_balance, make_transfer};
 use crate::utils::{export_key_pair, load_key_pair, user_id_to_string};
 
 /// Parses an input from terminal and returns an Input
@@ -29,7 +28,7 @@ pub fn parse_input(user_keypair : &Option<Keypair>) -> Result<Input, String>
 }
 
 /// Deals with a given input
-pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream: &mut Option<TcpStream>, user_keypairs: &mut Option<Keypair>)
+pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, main_sender : &Sender<String>, user_keypairs: &mut Option<Keypair>)
 {
     match input
     {
@@ -51,8 +50,7 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
                     Some(keypairs) =>
                         {
                             let instruction = transfer.sign(keypairs);
-                            let response = send_instruction(stream,instruction);
-                            strings_to_show.push(response.to_string());
+                            make_transfer(instruction, main_sender);
                         }
                 }
 
@@ -73,9 +71,7 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
 
         Input::Balance { user } =>
             {
-                let instruction = Instruction::Balance {user};
-                let response = send_instruction(stream,instruction);
-                strings_to_show.push(response.to_string());
+                get_balance(&user, main_sender);
 
             }
         Input::LoadWallet { path} =>
@@ -99,5 +95,6 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, stream:
                 strings_to_show.push(format!("Successfully generate the wallet {}. The wallet has also been loaded as current wallet.", path));
                 user_keypairs.replace(keypair);
             }
+        Input::None => {}
     }
 }
