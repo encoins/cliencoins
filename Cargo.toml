@@ -17,3 +17,6 @@ version = "1.0.1"
 [dependencies.yaml-rust]
 git = "https://github.com/chyh1990/yaml-rust.git"
 
+[dependencies.encoins-api]
+git = "https://github.com/encoins/encoins-api"
+

@@ -9,13 +9,12 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::time::Duration;
 use crate::yaml::*;
-use crate::instructions::Instruction;
-use crate::response::Response;
+use encoins_api::instruction::Instruction;
+use encoins_api::base_types::{Currency, UserId};
+use encoins_api::response::Response;
 use bincode::{deserialize};
 use serde::de::DeserializeOwned;
 use rand::random;
-use crate::base_types::Currency;
-use crate::UserId;
 
 /// Connects the client to a random node of the network using network parameters given in the `net_config.yml` file
 pub fn connect_to_network(stream: &mut Option<TcpStream>)
@@ -65,39 +64,6 @@ pub fn connect_to_network(stream: &mut Option<TcpStream>)
                 }
         }
 
-    }
-}
-
-/// Sends an instruction given by the client to a server
-pub fn send_instruction(stream : &mut Option<TcpStream>, instruction : Instruction) -> Response
-{
-    let mut buf = [0; 100];
-    // Makes sure the client is connected to a server
-    connect_to_network(stream);
-    match stream
-    {
-        Some(tcpstream) =>
-            {
-
-                let msg = &(bincode::serialize(&instruction).unwrap()[..]);
-                tcpstream.write(msg);
-
-                match tcpstream.read(&mut buf) {
-                    Ok(received) => {
-                        if received < 1 {
-                           return  Response::RcvErr;
-                        }
-                    }
-                    Err(_) => {
-                        return Response::RcvErr;
-                    }
-
-                }
-                let response : Response = deserialize(&buf[..]).unwrap();
-                response
-
-            }
-        None => { Response::SendErr }
     }
 }
 
@@ -367,7 +333,6 @@ fn spawn_response_thread<
 
 
                             // Loop to try receiving the message for a given wait time
-                            time_looped = Duration::new(0,0);
                             let loop_start = std::time::Instant::now();
                             let mut buf;
                             let mut received = false;

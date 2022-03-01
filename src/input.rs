@@ -1,8 +1,7 @@
 //! Definition of the input enum defining regular inputs
 
-use crate::base_types::{Currency, UserId};
-use crate::utils::{string_to_user_id};
-use ed25519_dalek::{Keypair, PublicKey};
+use encoins_api::base_types::{Currency, UserId};
+use ed25519_dalek::{Keypair};
 
 /// An input can either be a transfer or balance request or an interaction with the GUI
 pub enum Input
@@ -73,24 +72,19 @@ impl Input
                                         }
                                     Some(key) =>
                                         {
-                                            let parsed_uid = match string_to_user_id(&args[0])
+                                            let parsed_uid = match UserId::from_string(&args[0])
                                             {
                                                 Ok(uid) => { uid }
                                                 Err(err) => { return Err(err) }
                                             };
 
-                                            let recipient_key: PublicKey = match PublicKey::from_bytes(parsed_uid.as_ref())
-                                            {
-                                                Ok(pk) => { pk }
-                                                Err(_) => { return Err(String::from("Please enter a valid public key for the recipient of the transfer")) }
-                                            };
                                             let amount: u32 = match args[1].parse()
                                             {
                                                 Ok(number) => { number }
                                                 Err(_) => { return Err(String::from("Please enter a valid 32 bit unsigned integer for the amount of the transfer!")) }
                                             };
 
-                                            Ok(Input::Transfer { sender: key.public.to_bytes(), recipient: recipient_key.to_bytes(), amount })
+                                            Ok(Input::Transfer { sender: UserId::from_bytes(key.public.to_bytes()), recipient: parsed_uid, amount })
                                         }
                                 }
                             }
@@ -138,13 +132,13 @@ impl Input
                                                 }
                                             Some(key) =>
                                                 {
-                                                    return Ok(Input::Balance { user: key.public.to_bytes() })
+                                                    return Ok(Input::Balance { user: UserId::from_bytes(key.public.to_bytes()) })
                                                 }
                                         }
                                     }
                                 1 =>
                                     {
-                                        match string_to_user_id(&args[0])
+                                        match UserId::from_string(&args[0])
                                         {
                                             Ok(uid) => { Ok(Input::Balance { user: uid }) }
                                             Err(err) => { Err(err) }

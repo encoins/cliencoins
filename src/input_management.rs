@@ -2,10 +2,12 @@ use std::io;
 use std::sync::mpsc::Sender;
 use rand::rngs::OsRng;
 use ed25519_dalek::Keypair;
-use crate::{Input, ui};
-use crate::base_types::Transfer;
+use crate::{ui};
+use encoins_api::base_types::UserId;
+use encoins_api::transfer::Transfer;
+use crate::input::Input;
 use crate::network::{get_balance, make_transfer};
-use crate::utils::{export_key_pair, load_key_pair, user_id_to_string};
+use crate::utils::{export_key_pair, load_key_pair};
 
 /// Parses an input from terminal and returns an Input
 pub fn parse_input(user_keypair : &Option<Keypair>) -> Result<Input, String>
@@ -80,7 +82,7 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, main_se
                 {
                     Ok(keypairs) =>
                         {
-                            strings_to_show.push(format!("Successfully loaded wallet for user {}", user_id_to_string(&keypairs.public.to_bytes())));
+                            strings_to_show.push(format!("Successfully loaded wallet for user {}", UserId::from_bytes( keypairs.public.to_bytes())));
                             user_keypairs.replace(keypairs);
                         }
                     Err(err) => { strings_to_show.push(err) }

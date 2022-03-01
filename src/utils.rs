@@ -4,8 +4,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey};
-use crate::pub_key_converter::{comp_pub_key_from_string, string_from_compr_pub_key};
-use crate::UserId;
+use encoins_api::base_types::UserId;
 
 /// Loads a [`Keypair`] from a given file path
 /// # Errors
@@ -45,11 +44,11 @@ pub fn load_key_pair(path : &String) -> Result<Keypair,String>
     {
         if line_nb == 0
         {
-            match string_to_user_id(&lines.unwrap())
+            match UserId::from_string(&lines.unwrap())
             {
                 Ok(uid) =>
                     {
-                        pub_key = match PublicKey::from_bytes(uid.as_ref())
+                        pub_key = match PublicKey::from_bytes(uid.get_id().as_ref())
                         {
                             Ok( pk ) => { pk }
                             Err(e) => { return Err(e.to_string()) }
@@ -88,39 +87,26 @@ pub fn export_key_pair(path : &String, keypair : &Keypair)
 {
     let final_path = format!("{}{}", path, ".wallet");
     let mut file = File::create(final_path).unwrap();
-    file.write_all(user_id_to_string(&keypair.public.to_bytes()).as_bytes()).unwrap();
+    file.write_all(UserId::from_bytes(keypair.public.to_bytes()).to_string().as_bytes()).unwrap();
     file.write_all(b"\n").unwrap();
     file.write_all(secrete_key_to_string(&keypair.secret).as_bytes()).unwrap();
     file.flush().unwrap();
 }
 
-
-/// Converts a [`UserId`] to a [`String`]
-pub fn user_id_to_string(user : &UserId) -> String
-{
-    string_from_compr_pub_key(user)
-}
-
-/// Converts a [`String`] to a [`UserId`]
-pub fn string_to_user_id(str : &String) -> Result<UserId,String>
-{
-    comp_pub_key_from_string(str)
-}
-
 fn secrete_key_to_string(sec_key : &SecretKey) -> String
 {
-    string_from_compr_pub_key(&sec_key.to_bytes())
+    UserId::from_bytes(sec_key.to_bytes()).to_string()
 }
 
 fn string_to_secret_key(str : &String) -> Result<SecretKey, String>
 {
-    let key = match comp_pub_key_from_string(str)
+    let user = match UserId::from_string(str)
     {
-        Ok(k) => {k}
+        Ok(u) => {u}
         Err(s) => { return Err(s) }
     };
 
-    match SecretKey::from_bytes( key.as_ref() )
+    match SecretKey::from_bytes( user.get_id().as_ref())
     {
         Ok(sec_key) => { Ok(sec_key) }
         Err(e) => { Err(e.to_string()) }

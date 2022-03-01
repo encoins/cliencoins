@@ -1,26 +1,20 @@
 extern crate core;
 
 mod input;
-mod base_types;
 mod network;
-mod instructions;
-mod response;
 mod yaml;
 mod ui;
 mod input_management;
-mod transfer;
 mod utils;
-mod pub_key_converter;
 
-use crate::base_types::UserId;
-use crate::input::Input;
 use std::env;
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use ed25519_dalek::Keypair;
+use encoins_api::base_types::UserId;
 use crate::input_management::{deal_with_input, parse_input};
 use crate::ui::{show_terminal};
-use crate::utils::{load_key_pair, user_id_to_string};
+use crate::utils::{load_key_pair};
 
 
 fn main()
@@ -47,7 +41,7 @@ fn main()
                 {
                     Ok(kp) =>
                         {
-                            additional_strings.push(format!("Successfully loaded wallet for user {}", user_id_to_string(&kp.public.to_bytes())));
+                            additional_strings.push(format!("Successfully loaded wallet for user {}", UserId::from_bytes(kp.public.to_bytes())));
                             Some(kp)
                         }
                     Err(err) =>
