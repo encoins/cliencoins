@@ -48,7 +48,7 @@ pub fn load_key_pair(path : &String) -> Result<Keypair,String>
             {
                 Ok(uid) =>
                     {
-                        pub_key = match PublicKey::from_bytes(uid.get_id().as_ref())
+                        pub_key = match PublicKey::from_bytes(uid.id.as_ref())
                         {
                             Ok( pk ) => { pk }
                             Err(e) => { return Err(e.to_string()) }
@@ -106,7 +106,7 @@ fn string_to_secret_key(str : &String) -> Result<SecretKey, String>
         Err(s) => { return Err(s) }
     };
 
-    match SecretKey::from_bytes( user.get_id().as_ref())
+    match SecretKey::from_bytes( user.id.as_ref())
     {
         Ok(sec_key) => { Ok(sec_key) }
         Err(e) => { Err(e.to_string()) }
