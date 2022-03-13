@@ -41,11 +41,11 @@ pub fn connect_to_network(stream: &mut Option<TcpStream>)
     let hash_net_config = yaml_to_hash("net_config.yml");
     let nb_nodes = read_network_parameters(&hash_net_config);
 
-    let rd_start: u32 = random::<u32>()%nb_nodes +1;
+    let rd_start: u32 = random::<u32>()%nb_nodes;
     // Tries to connect to each server until it achieves to do so.
-    for i in 1..nb_nodes+1
+    for i in 0..nb_nodes
     {
-        let id_node = (i +rd_start)%nb_nodes + 1;
+        let id_node = (i +rd_start)%nb_nodes;
         let address = read_server_address(&hash_net_config, id_node);
         //println!("Trying to connect to node {}...", id_node);
 
@@ -88,7 +88,7 @@ pub fn get_balance(user : &UserId, main_sender : &Sender<String>)
 
 
                 // Spawn response thread for each server
-                for i in 1..(nb_nodes+1)
+                for i in 0..nb_nodes
                 {
                     let sender_cop = sender.clone();
                     // Function that deals with the server response
