@@ -1,5 +1,6 @@
 use std::io;
 use std::sync::mpsc::Sender;
+use std::{thread, time};
 use rand::rngs::OsRng;
 use ed25519_dalek::Keypair;
 use crate::{ui};
@@ -53,6 +54,8 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, main_se
                         {
                             let instruction = transfer.sign(keypairs);
                             make_transfer(instruction, main_sender);
+                            let time_sleep = time::Duration::from_secs(10000);
+                            thread::sleep(time_sleep);
                         }
                 }
 
