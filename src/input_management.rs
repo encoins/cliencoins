@@ -54,8 +54,6 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, main_se
                         {
                             let instruction = transfer.sign(keypairs);
                             make_transfer(instruction, main_sender);
-                            let time_sleep = time::Duration::from_secs(10000);
-                            thread::sleep(time_sleep);
                         }
                 }
 
@@ -70,6 +68,8 @@ pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, main_se
             }
         Input::Quit =>
             {
+                let time_sleep = time::Duration::from_secs(10000);
+                thread::sleep(time_sleep);
                 println!("Goodbye!");
                 std::process::exit(0);
             }
