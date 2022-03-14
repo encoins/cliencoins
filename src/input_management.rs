@@ -32,6 +32,7 @@ pub fn parse_input(user_keypair : &Option<Keypair>) -> Result<Input, String>
 /// Deals with a given input
 pub fn deal_with_input(input : Input, strings_to_show: &mut Vec<String>, main_sender : &Sender<String>, user_keypairs: &mut Option<Keypair>)
 {
+    println!("Input : {}", input);
     match input
     {
         Input::Transfer { sender, recipient, amount } =>

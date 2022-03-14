@@ -3,19 +3,6 @@
 version = 3
 
 [[package]]
-name = "CliENcoinS"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "chrono",
- "ed25519-dalek",
- "encoins-api",
- "rand",
- "serde",
- "yaml-rust",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -62,6 +49,19 @@ dependencies = [
  "num-traits",
  "time",
  "winapi",
+]
+
+[[package]]
+name = "cliencoins"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "chrono",
+ "ed25519-dalek",
+ "encoins-api",
+ "rand",
+ "serde",
+ "yaml-rust",
 ]
 
 [[package]]
@@ -121,7 +121,7 @@ dependencies = [
 [[package]]
 name = "encoins-api"
 version = "0.1.1"
-source = "git+https://github.com/encoins/encoins-api#1c6f9c1d3b47239bc6994da51edea9f641523a79"
+source = "git+https://github.com/encoins/encoins-api#246a49bae0db2a1d2167e73b85c481f7086493c6"
 dependencies = [
  "bincode",
  "ed25519-dalek",

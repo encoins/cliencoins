@@ -1,5 +1,6 @@
 //! Definition of the input enum defining regular inputs
 
+use std::fmt::{Display, Formatter, write};
 use encoins_api::base_types::{Currency, UserId};
 use ed25519_dalek::{Keypair};
 
@@ -26,6 +27,25 @@ pub enum Input
 
 
 }
+
+impl Display for Input
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result
+    {
+        match self
+        {
+            Input::Transfer { .. } => { write!(f, "Transfer") }
+            Input::Balance { .. } => { write!(f, "Balance") }
+            Input::LoadWallet { .. } => { write!(f, "LdWallet") }
+            Input::GenWallet { .. } => { write!(f, "GenWallet") }
+            Input::Help => { write!(f, "Help") }
+            Input::Clear => { write!(f, "Cleat") }
+            Input::Quit => { write!(f, "Quit") }
+            Input::None => { write!(f, "None") }
+        }
+    }
+}
+
 
 impl Input
 {

@@ -1,5 +1,4 @@
 extern crate core;
-
 mod input;
 mod network;
 mod yaml;
@@ -10,8 +9,11 @@ mod utils;
 use std::env;
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 use ed25519_dalek::Keypair;
 use encoins_api::base_types::UserId;
+use crate::input::Input;
 use crate::input_management::{deal_with_input, parse_input};
 use crate::ui::{show_terminal};
 use crate::utils::{load_key_pair};
@@ -19,8 +21,13 @@ use crate::utils::{load_key_pair};
 
 fn main()
 {
+    let start_time = Instant::now();
+    let mut waiting_responses:u32 = 0;
+
     // A wallet path can be given as a first argument
     let args: Vec<String> = env::args().collect();
+
+    // Used to time program execution
 
     // Vector containing additional strings to be outputted on screen under the logo
     let mut additional_strings = vec![];
@@ -32,7 +39,7 @@ fn main()
     let (main_sender, main_receiver) : (Sender<String>, Receiver<String>) = mpsc::channel();
 
     // Current Keypair (User). Can be None if no user is connected
-    let mut user_keypair : Option<Keypair> = match args.get(1)
+    let mut user_keypair : Option<Keypair> = match args.get(2)
     {
         None => { None }
         Some(path ) =>
@@ -53,14 +60,42 @@ fn main()
             }
     };
 
+    let input_terminal : bool = match args.get(1)
+    {
+        None =>
+            {
+                true
+            }
+        Some(b) =>
+            {
+                b.parse().unwrap()
+            }
+    };
+
     // Main loop where we juste wait for inputs and deal with them
     loop
     {
-        show_terminal(&additional_strings);
+        if input_terminal
+        {
+            show_terminal(&additional_strings);
+        }
         match parse_input(&user_keypair)
         {
             Ok(inp) =>
                 {
+                    match inp
+                    {
+                        Input::Quit =>
+                            {
+                                quit(start_time, &mut waiting_responses, &main_receiver);
+                            }
+                        Input::Transfer {.. } | Input::Balance{..} =>
+                        {
+                            waiting_responses +=1;
+                        }
+                        _ => {}
+                    }
+
                     deal_with_input(inp, &mut additional_strings, &main_sender, &mut user_keypair);
                 }
             Err(err) =>
@@ -68,13 +103,13 @@ fn main()
                     additional_strings.push(err);
                 }
         }
-        update_responses(&mut additional_strings, &main_receiver);
+        update_responses(&mut additional_strings, &main_receiver, &mut waiting_responses);
 
     }
 
 }
 
-fn update_responses(additional_strings: &mut Vec<String>, main_receiver : &Receiver<String>)
+fn update_responses(additional_strings: &mut Vec<String>, main_receiver : &Receiver<String>, waiting_responses: &mut u32)
 {
     loop
     {
@@ -82,7 +117,11 @@ fn update_responses(additional_strings: &mut Vec<String>, main_receiver : &Recei
         {
             Ok(str) =>
                 {
+
+                    *waiting_responses-= 1;
+                    println!("Got response : {} ; Subastracitng one, remaining : {}", str, waiting_responses);
                     additional_strings.push(str);
+
                 }
             Err(_) =>
                 {
@@ -90,4 +129,18 @@ fn update_responses(additional_strings: &mut Vec<String>, main_receiver : &Recei
                 }
         }
     }
+}
+
+fn quit(start_instant : Instant, waiting_responses: &mut u32, main_receiver : &Receiver<String>)
+{
+    let mut dontcare = vec![];
+    while *waiting_responses != 0
+    {
+        println!("Waiting for {} responses", waiting_responses);
+        update_responses(&mut dontcare, &main_receiver, waiting_responses);
+        sleep(Duration::from_millis(10));
+    }
+    let elapsed_time = Instant::now() - start_instant;
+    println!("{}", elapsed_time.as_millis());
+    std::process::exit(0);
 }
