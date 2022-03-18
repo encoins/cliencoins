@@ -2,6 +2,7 @@
 
 use core::time;
 use std::collections::HashMap;
+use std::fmt::format;
 use std::net::{TcpStream};
 use std::io::{Write,Read};
 use std::sync::mpsc;
@@ -151,7 +152,7 @@ pub fn get_balance(user : &UserId, main_sender : &Sender<String>)
                 {
                     0 =>
                         {
-                            panic!("Fatal error while trying to make the balance request : no value returned");
+                            rtn_str = format!("Could not connect to any server! (Are you connected to the internet?)");
                         }
                     1 =>
                         {

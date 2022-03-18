@@ -16,7 +16,7 @@ server3:
   port_server: 12344
   port_client: 12345
 
-server4:
+server0:
   address: localhost
   port_server: 12346
   port_client: 12347
