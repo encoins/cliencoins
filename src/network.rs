@@ -45,7 +45,7 @@ pub fn connect_to_network(stream: &mut Option<TcpStream>)
     // Tries to connect to each server until it achieves to do so.
     for i in 0..nb_nodes
     {
-        let id_node = (i +rd_start)%nb_nodes +1 ;
+        let id_node = (i +rd_start)%nb_nodes;
         let address = read_server_address(&hash_net_config, id_node);
         //println!("Trying to connect to node {}...", id_node);
 

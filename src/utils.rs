@@ -27,7 +27,7 @@ pub fn load_key_pair(path : &String) -> Result<Keypair,String>
                     "wallet" => {}
                     _ =>
                         {
-                            return Err(format!("Given file does not have the right extension! (The given file should be of type *.wallet)"))
+                            return Err(format!("Given file ({}) does not have the right extension! (The given file should be of type *.wallet)",path))
                         }
                 }
             }

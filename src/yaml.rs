@@ -1,12 +1,14 @@
 extern crate yaml_rust;
 use yaml_rust::yaml::{Hash, Yaml, YamlLoader};
-use std::fs;
+use std::{env, fs};
 
 pub fn yaml_to_hash(file: &str) -> Hash {
-
+    let mut exec_file_path = env::current_exe().unwrap();
+    exec_file_path.pop();
+    let path = format!("{}/{}",exec_file_path.to_str().unwrap(), file);
     // Load the yaml file into a str
-    let str_yaml: &str = &fs::read_to_string(file)
-        .expect("something got wrong with the opening of net_config.yml")[..];
+    let str_yaml: &str = &fs::read_to_string(&path)
+        .expect(&*format!("Could not find net_config file at {}", path))[..];
 
     // Transform the str into a Yaml hash table
     let vec_yaml: Vec<Yaml> = YamlLoader::load_from_str(str_yaml).unwrap();

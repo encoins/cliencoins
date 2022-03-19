@@ -83,7 +83,8 @@ impl Input
                             if args.len() != 2
                             {
                                 return Err(String::from(Input::WRONG_AMOUNT_OF_ARGS))
-                            } else {
+                            }
+                            else {
                                 match sender_keypair
                                 {
                                     None =>

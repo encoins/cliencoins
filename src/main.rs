@@ -7,6 +7,8 @@ mod input_management;
 mod utils;
 
 use std::env;
+use std::fs::{File, OpenOptions};
+use std::io::{BufRead, BufReader};
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread::sleep;
@@ -24,7 +26,7 @@ fn main()
     let start_time = Instant::now();
     let mut waiting_responses:u32 = 0;
 
-    // A wallet path can be given as a first argument
+    // A wallet path can be given as a second argument
     let args: Vec<String> = env::args().collect();
 
     // Used to time program execution
@@ -59,6 +61,8 @@ fn main()
                 }
             }
     };
+
+    let mut user_keypair = None;
 
     let input_terminal : bool = match args.get(1)
     {
@@ -100,7 +104,14 @@ fn main()
                 }
             Err(err) =>
                 {
-                    additional_strings.push(err);
+                    if input_terminal
+                    {
+                        additional_strings.push(err);
+                    }
+                    else
+                    {
+                        println!("{}",err);
+                    }
                 }
         }
         update_responses(&mut additional_strings, &main_receiver, &mut waiting_responses);
@@ -141,6 +152,6 @@ fn quit(start_instant : Instant, waiting_responses: &mut u32, main_receiver : &R
         sleep(Duration::from_millis(10));
     }
     let elapsed_time = Instant::now() - start_instant;
-    println!("{}", elapsed_time.as_millis());
+    println!("\n{}", elapsed_time.as_millis());
     std::process::exit(0);
 }

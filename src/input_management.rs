@@ -24,9 +24,16 @@ pub fn parse_input(user_keypair : &Option<Keypair>) -> Result<Input, String>
     let len = input_line.len();
 
     // Parsing of the input line as an op_type and an array args of arguments, managing the syntax errors
-    words = input_line[..len-1].split(' ').collect();
+    if len>0
+    {
+        words = input_line[..len-1].split(' ').collect();
+        Input::from(&words, user_keypair)
+    }
+    else
+    {
+        Err(format!("Could not read anything in the input :  {}", input_line))
+    }
 
-    Input::from(&words, user_keypair)
 }
 
 /// Deals with a given input
