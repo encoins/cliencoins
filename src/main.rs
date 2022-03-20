@@ -62,8 +62,6 @@ fn main()
             }
     };
 
-    let mut user_keypair = None;
-
     let input_terminal : bool = match args.get(1)
     {
         None =>
@@ -130,7 +128,7 @@ fn update_responses(additional_strings: &mut Vec<String>, main_receiver : &Recei
                 {
 
                     *waiting_responses-= 1;
-                    println!("Got response : {} ; Subastracitng one, remaining : {}", str, waiting_responses);
+                    println!("Got response : {} ; Subastracting one, remaining : {}", str, waiting_responses);
                     additional_strings.push(str);
 
                 }
@@ -144,11 +142,22 @@ fn update_responses(additional_strings: &mut Vec<String>, main_receiver : &Recei
 
 fn quit(start_instant : Instant, waiting_responses: &mut u32, main_receiver : &Receiver<String>)
 {
-    let mut dontcare = vec![];
     while *waiting_responses != 0
     {
         println!("Waiting for {} responses", waiting_responses);
-        update_responses(&mut dontcare, &main_receiver, waiting_responses);
+        match main_receiver.recv()
+        {
+            Ok(str) =>
+                {
+                    *waiting_responses-=1;
+                    println!("Got response : {} ; Subastracting one, remaining : {}", str, waiting_responses);
+                }
+            Err(err) =>
+                {
+                    println!("Error : {}", err.to_string());
+                }
+
+        }
         sleep(Duration::from_millis(10));
     }
     let elapsed_time = Instant::now() - start_instant;

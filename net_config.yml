@@ -1,22 +1,102 @@
 parameters:
-  nb_servers: 4
+ nb_servers: 20
+server0:
+ address: localhost
+ port_server: 12345
+ port_client: 12346
 
 server1:
-  address: localhost
-  port_server: 12340
-  port_client: 12341
+ address: localhost
+ port_server: 12347
+ port_client: 12348
 
 server2:
-  address: localhost
-  port_server: 12342
-  port_client: 12343
+ address: localhost
+ port_server: 12349
+ port_client: 12350
 
 server3:
-  address: localhost
-  port_server: 12344
-  port_client: 12345
+ address: localhost
+ port_server: 12351
+ port_client: 12352
 
 server4:
-  address: localhost
-  port_server: 12346
-  port_client: 12347
+ address: localhost
+ port_server: 12353
+ port_client: 12354
+
+server5:
+ address: localhost
+ port_server: 12355
+ port_client: 12356
+
+server6:
+ address: localhost
+ port_server: 12357
+ port_client: 12358
+
+server7:
+ address: localhost
+ port_server: 12359
+ port_client: 12360
+
+server8:
+ address: localhost
+ port_server: 12361
+ port_client: 12362
+
+server9:
+ address: localhost
+ port_server: 12363
+ port_client: 12364
+
+server10:
+ address: localhost
+ port_server: 12365
+ port_client: 12366
+
+server11:
+ address: localhost
+ port_server: 12367
+ port_client: 12368
+
+server12:
+ address: localhost
+ port_server: 12369
+ port_client: 12370
+
+server13:
+ address: localhost
+ port_server: 12371
+ port_client: 12372
+
+server14:
+ address: localhost
+ port_server: 12373
+ port_client: 12374
+
+server15:
+ address: localhost
+ port_server: 12375
+ port_client: 12376
+
+server16:
+ address: localhost
+ port_server: 12377
+ port_client: 12378
+
+server17:
+ address: localhost
+ port_server: 12379
+ port_client: 12380
+
+server18:
+ address: localhost
+ port_server: 12381
+ port_client: 12382
+
+server19:
+ address: localhost
+ port_server: 12383
+ port_client: 12384
+
