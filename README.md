@@ -1,6 +1,6 @@
 ## Usage
- - `NUM_NODE={i} cargo run` to run the client i (we use an environment variable)
+ - `cargo run --release` to run the client with optimizations
  - servers informations have to be filled in the file net_config.yml
 
 ## Documentation
-To read documentation, type:`cargo doc` and run the file `index.html` in path `target/doc/encoins`
+To read code documentation, type:`cargo doc` and run the file `index.html` in path `target/doc/encoins`
