@@ -41,12 +41,7 @@ server7:
   port_server: 12345
   port_client: 12346
 
-server8:
-  address: 171.33.79.117
-  port_server: 12345
-  port_client: 12346
-
-server9:
-  address: 171.33.95.222
-  port_server: 12345
-  port_client: 12346
+server0:
+  address: localhost
+  port_server: 12346
+  port_client: 12347
